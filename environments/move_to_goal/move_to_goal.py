@@ -69,7 +69,7 @@ class MoveToGoal(object):
 
         if log_frame_time:
             frame_time = time.time() - frame_start
-            print(frame_time)
+            print(f"Frame time: {frame_time * 1_000} ms")
 
     def execute_player_action(self):
         action = self.player.produce_action()
