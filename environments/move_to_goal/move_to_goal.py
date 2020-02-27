@@ -19,10 +19,10 @@ class GameObject(object):
         if self.actions is None:
             raise ValueError("Please set the object actions attribute first")
 
-        return np.random.randint(1, len(self.actions) + 1)
+        return np.random.randint(0, len(self.actions))
 
 
-class MoveToGoal(object):
+class MoveToTheThing(object):
 
     def __init__(self, board_height: int, board_width: int):
 
@@ -34,7 +34,7 @@ class MoveToGoal(object):
         self.positions = {"player": None, "goal": None}
         self.colors = {"player": (255, 150, 0),
                        "goal": (0, 255, 0)}
-        self.actions = {1: "up", 2: "right", 3: "down", 4: "left"}
+        self.actions = ["up", "right", "down", "left"]
 
     def add_player(self, player: GameObject):
         self.player = player
@@ -76,18 +76,20 @@ class MoveToGoal(object):
         player_x = self.positions["player"][0]
         player_y = self.positions["player"][1]
 
-        if action == 1:
+        if action == 0:
             if player_x < self.board_height - 1:
                 player_x += 1
-        elif action == 2:
+        elif action == 1:
             if player_y < self.board_width - 1:
                 player_y += 1
-        elif action == 3:
+        elif action == 2:
             if player_x > 0:
                 player_x -= 1
-        elif action == 4:
+        elif action == 3:
             if player_y > 0:
                 player_y -= 1
+        else:
+            raise ValueError(f"Wrong action: {action}")
 
         self.positions["player"] = (player_x, player_y)
 
@@ -104,8 +106,8 @@ class MoveToGoal(object):
                 time.sleep(.5)
 
 
-test_game = MoveToGoal(10, 10)
+test_game = MoveToTheThing(10, 10)
 test_game.add_player(GameObject("player1"))
 test_game.add_goal(GameObject("goal"))
 test_game.prepare_game()
-test_game.play_game(logs=True, human_view=True)
+test_game.play_game(logs=True, human_view=False)
