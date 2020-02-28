@@ -1,19 +1,8 @@
-import time
 from typing import Tuple
 
 import cv2
 import numpy as np
 from PIL import Image
-
-
-class GameObject(object):
-
-    def __init__(self, name: str):
-        self.name = name
-        self.actions = None
-
-    def assign_actions(self, actions: dict):
-        self.actions = actions
 
 
 class MoveToGoal(object):
@@ -22,22 +11,14 @@ class MoveToGoal(object):
 
         self.board_x = board_x
         self.board_y = board_y
-        self.player = None
-        self.goal = None
         self.board = None
         self.positions = {"player": None, "goal": None}
         self.colors = {"player": (255, 150, 0),
                        "goal": (0, 255, 0)}
         self.actions = ["up", "right", "down", "left"]
 
-    def add_player(self, player: GameObject):
-        self.player = player
-
-    def add_goal(self, goal: GameObject):
-        self.goal = goal
-
-    def assign_player_actions(self):
-        self.player.assign_actions(self.actions)
+    def get_board_size(self):
+        return self.board_x, self.board_y
 
     def generate_board(self):
         self.board = np.zeros((self.board_x, self.board_y, 3), dtype=np.uint8)
@@ -51,7 +32,6 @@ class MoveToGoal(object):
             self.positions["goal"] = (np.random.randint(0, self.board_y), np.random.randint(0, self.board_x))
 
         self.generate_board()
-        self.assign_player_actions()
 
     def prepare_game(self, player_pos: Tuple[int, int], goal_pos: Tuple[int, int]):
 
@@ -62,7 +42,6 @@ class MoveToGoal(object):
         self.positions["goal"] = goal_pos
 
         self.generate_board()
-        self.assign_player_actions()
 
     def display_game(self):
         board_image = np.transpose(self.board, (1, 0, 2))
@@ -95,13 +74,15 @@ class MoveToGoal(object):
 
         self.generate_board()
 
-    def play_game(self, agent, human_view: bool=False):
+    def step(self, action: int) -> (Tuple[Tuple[int, int], Tuple[int, int]], float, bool):
 
-        while True:
-            self.display_game()
-            action = agent.produce_action()
-            self.execute_player_action(action)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-            if human_view:
-                time.sleep(.5)
+        self.execute_player_action(action)
+
+        if self.positions["player"] == self.positions["goal"]:
+            reward = 1
+            done = True
+        else:
+            reward = -1
+            done = False
+
+        return (self.positions["player"], self.positions["goal"]), reward, done
