@@ -74,6 +74,9 @@ class MoveToGoal(object):
 
         self.generate_board()
 
+    def get_state(self):
+        return self.positions["player"], self.positions["goal"]
+
     def step(self, action: int) -> (Tuple[Tuple[int, int], Tuple[int, int]], float, bool):
 
         self.execute_player_action(action)
@@ -85,4 +88,6 @@ class MoveToGoal(object):
             reward = -1
             done = False
 
-        return (self.positions["player"], self.positions["goal"]), reward, done
+        state = self.get_state()
+
+        return state, reward, done

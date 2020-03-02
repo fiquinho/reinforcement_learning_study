@@ -8,6 +8,9 @@ from environments.move_to_goal.move_to_goal import MoveToGoal
 
 
 DEFAULT_BOARD_SIZE = (6, 10)
+EPISODES = 200
+GAME_END = 50
+SHOW_EVERY = int(EPISODES * 0.1)
 
 
 class Agent(object):
@@ -25,6 +28,9 @@ class Agent(object):
 def main():
     parser = argparse.ArgumentParser(description="Q Learning agent that plays the MoveToGoal environment.")
     parser.add_argument("--board_size", type=int, nargs="*", default=DEFAULT_BOARD_SIZE)
+    parser.add_argument("--episodes", type=int, default=EPISODES)
+    parser.add_argument("--game_end", type=int, default=GAME_END)
+    parser.add_argument("--show_every", type=int, default=SHOW_EVERY)
     args = parser.parse_args()
 
     board_size = args.board_size
@@ -33,26 +39,38 @@ def main():
                          f"Found ( {len(board_size)} ) values = {board_size}")
 
     test_game = MoveToGoal(board_size[0], board_size[1])
-    test_game.prepare_game(player_pos=(0, 0), goal_pos=(board_size[0] - 1, board_size[1] - 1))
-
     test_agent = Agent(game=test_game)
 
-    human_view = False
-    while True:
-        test_game.display_game()
-        action = test_agent.produce_action()
-        state, reward, done = test_game.step(action)
+    print("Training the agent")
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+    for episode in range(args.episodes):
+        if not episode % args.show_every:
+            print(f"Showing episode N° {episode}")
+            show = True
+        else:
+            show = False
 
-        if done:
-            break
+        test_game.prepare_game(player_pos=(0, 0), goal_pos=(board_size[0] - 1, board_size[1] - 1))
 
-        if human_view:
-            time.sleep(.5)
+        steps_played = 0
+        while True:
 
-        print(reward, state)
+            if show:
+                test_game.display_game()
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+
+                time.sleep(.1)
+
+            action = test_agent.produce_action()
+            state, reward, done = test_game.step(action)
+            steps_played += 1
+
+            if done:
+                break
+
+            if steps_played >= args.game_end:
+                break
 
 
 if __name__ == '__main__':
