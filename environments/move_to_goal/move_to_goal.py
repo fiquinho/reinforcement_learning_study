@@ -82,7 +82,7 @@ class MoveToGoal(object):
         self.execute_player_action(action)
 
         if self.positions["player"] == self.positions["goal"]:
-            reward = 1
+            reward = 250
             done = True
         else:
             reward = -1

@@ -1,16 +1,23 @@
 import time
 import argparse
+from typing import Tuple
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import style
 
 from environments.move_to_goal.move_to_goal import MoveToGoal
 
 
-DEFAULT_BOARD_SIZE = (6, 10)
-EPISODES = 200
-GAME_END = 50
+DEFAULT_BOARD_SIZE = (10, 15)
+EPISODES = 30000
+GAME_END = 200
 SHOW_EVERY = int(EPISODES * 0.1)
+LEARNING_RATE = 0.1
+DISCOUNT = 0.95
+
+style.use("ggplot")
 
 
 class Agent(object):
@@ -18,11 +25,19 @@ class Agent(object):
     def __init__(self, game: MoveToGoal):
 
         self.game = game
-        self.q_table = np.random.uniform(low=-2, high=1, size=self.game.get_board_size())
+        self.board_size = self.game.get_board_size()
+        self.q_table = np.random.uniform(low=-2, high=0, size=(self.board_size[0],
+                                                               self.board_size[1],
+                                                               len(self.game.actions)))
 
-    def produce_action(self):
+    def produce_action(self, state: Tuple[Tuple[int, int], Tuple[int, int]]):
 
-        return np.random.randint(0, len(self.game.actions))
+        action = np.argmax(self.q_table[state[0]])
+
+        return action
+
+    def reshape_q_table(self):
+        return self.q_table.reshape([self.board_size[0] * self.board_size[1], len(self.game.actions)])
 
 
 def main():
@@ -41,36 +56,79 @@ def main():
     test_game = MoveToGoal(board_size[0], board_size[1])
     test_agent = Agent(game=test_game)
 
+    epsilon = 1
+    end_epsilon_decay = args.episodes // 2
+    epsilon_decay = 0.9998
+
     print("Training the agent")
 
+    episodes_wins = []
+    episode_rewards = []
+
     for episode in range(args.episodes):
-        if not episode % args.show_every:
-            print(f"Showing episode N° {episode}")
-            show = True
-        else:
-            show = False
 
         test_game.prepare_game(player_pos=(0, 0), goal_pos=(board_size[0] - 1, board_size[1] - 1))
 
         steps_played = 0
-        while True:
+        done = False
+
+        if not episode % args.show_every:
+            print(f"Showing episode N° {episode}")
+            print(f"on #{episode}, epsilon is {epsilon}")
+            print(f"{SHOW_EVERY} ep mean: {np.mean(episode_rewards[-SHOW_EVERY:])}")
+            batch_wins = np.sum(episodes_wins[-SHOW_EVERY:])
+            print(f"Wins in last {SHOW_EVERY} episodes = {batch_wins}")
+            show = True
+        else:
+            show = False
+
+        episode_reward = 0
+        while not done:
 
             if show:
                 test_game.display_game()
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
 
-                time.sleep(.1)
+                time.sleep(.01)
 
-            action = test_agent.produce_action()
-            state, reward, done = test_game.step(action)
+            board_state = test_game.get_state()
+
+            if np.random.random() > epsilon:
+                action = test_agent.produce_action(board_state)
+            else:
+                action = np.random.randint(0, len(test_game.actions))
+            new_board_state, reward, done = test_game.step(action)
             steps_played += 1
 
             if done:
-                break
+                test_agent.q_table[board_state[0] + (action,)] = reward
+                episodes_wins.append(True)
+            else:
+                max_future_q = np.max(test_agent.q_table[new_board_state[0]])
+                current_q = test_agent.q_table[board_state[0] + (action,)]
+
+                new_q = (1 - LEARNING_RATE) * current_q + LEARNING_RATE * (reward + DISCOUNT * max_future_q)
+
+                test_agent.q_table[board_state[0] + (action,)] = new_q
+
+            episode_reward += reward
 
             if steps_played >= args.game_end:
-                break
+                episodes_wins.append(False)
+                done = True
+
+        if end_epsilon_decay >= episode >= 0:
+            epsilon *= epsilon_decay
+
+        episode_rewards.append(episode_reward)
+
+    moving_avg = np.convolve(episode_rewards, np.ones((SHOW_EVERY,))/SHOW_EVERY, mode='valid')
+
+    plt.plot([i for i in range(len(moving_avg))], moving_avg)
+    plt.ylabel(f"Reward {SHOW_EVERY}ma")
+    plt.xlabel("episode #")
+    plt.show()
 
 
 if __name__ == '__main__':
