@@ -11,7 +11,9 @@ from environments.move_to_goal.move_to_goal import MoveToGoal
 
 
 DEFAULT_BOARD_SIZE = (10, 15)
-EPISODES = 30000
+GOAL_REWARD = 250
+MOVE_REWARD = -1
+EPISODES = 5000
 GAME_END = 200
 SHOW_EVERY = int(EPISODES * 0.1)
 LEARNING_RATE = 0.1
@@ -53,7 +55,7 @@ def main():
         raise ValueError(f"The board size must be 2 values. "
                          f"Found ( {len(board_size)} ) values = {board_size}")
 
-    test_game = MoveToGoal(board_size[0], board_size[1])
+    test_game = MoveToGoal(board_size[0], board_size[1], GOAL_REWARD, MOVE_REWARD)
     test_agent = Agent(game=test_game)
 
     epsilon = 1
@@ -128,6 +130,13 @@ def main():
     plt.plot([i for i in range(len(moving_avg))], moving_avg)
     plt.ylabel(f"Reward {SHOW_EVERY}ma")
     plt.xlabel("episode #")
+    text_x = int(len(moving_avg) * 0.6)
+    text_y = 0
+    plt.text(text_x, text_y,
+             f"Goal reward: {GOAL_REWARD}\n"
+             f"Move reward: {MOVE_REWARD}\n",
+             fontweight='bold',
+             bbox={"facecolor": "orange", "alpha": 0.5, "pad": 5})
     plt.show()
 
 

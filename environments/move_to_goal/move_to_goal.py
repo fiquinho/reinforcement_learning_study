@@ -7,10 +7,12 @@ from PIL import Image
 
 class MoveToGoal(object):
 
-    def __init__(self, board_x: int, board_y: int):
+    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int):
 
         self.board_x = board_x
         self.board_y = board_y
+        self.goal_reward = goal_reward
+        self.move_reward = move_reward
         self.board = None
         self.positions = {"player": None, "goal": None}
         self.colors = {"player": (255, 150, 0),
@@ -82,10 +84,10 @@ class MoveToGoal(object):
         self.execute_player_action(action)
 
         if self.positions["player"] == self.positions["goal"]:
-            reward = 250
+            reward = self.goal_reward
             done = True
         else:
-            reward = -1
+            reward = self.move_reward
             done = False
 
         state = self.get_state()
