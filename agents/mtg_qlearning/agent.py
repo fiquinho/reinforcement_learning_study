@@ -48,6 +48,7 @@ def main():
     parser.add_argument("--episodes", type=int, default=EPISODES)
     parser.add_argument("--game_end", type=int, default=GAME_END)
     parser.add_argument("--show_every", type=int, default=SHOW_EVERY)
+    parser.add_argument("--plot_game", action="store_true", default=False)
     args = parser.parse_args()
 
     board_size = args.board_size
@@ -69,7 +70,7 @@ def main():
 
     for episode in range(args.episodes):
 
-        test_game.prepare_game(player_pos=(0, 0), goal_pos=(board_size[0] - 1, board_size[1] - 1))
+        test_game.prepare_random_game(goal_pos=(board_size[0] - 1, board_size[1] - 1))
 
         steps_played = 0
         done = False
@@ -87,7 +88,7 @@ def main():
         episode_reward = 0
         while not done:
 
-            if show:
+            if show and args.plot_game:
                 test_game.display_game()
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
@@ -131,7 +132,7 @@ def main():
     plt.ylabel(f"Reward {SHOW_EVERY}ma")
     plt.xlabel("episode #")
     text_x = int(len(moving_avg) * 0.6)
-    text_y = 0
+    text_y = (max(moving_avg) + min(moving_avg)) // 2
     plt.text(text_x, text_y,
              f"Goal reward: {GOAL_REWARD}\n"
              f"Move reward: {MOVE_REWARD}\n",

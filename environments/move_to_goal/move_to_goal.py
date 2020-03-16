@@ -27,11 +27,18 @@ class MoveToGoal(object):
         self.board[self.positions["player"]] = self.colors["player"]
         self.board[self.positions["goal"]] = self.colors["goal"]
 
-    def prepare_random_game(self):
-        self.positions["player"] = (np.random.randint(0, self.board_y), np.random.randint(0, self.board_x))
-        self.positions["goal"] = (np.random.randint(0, self.board_y), np.random.randint(0, self.board_x))
-        while self.positions["player"] == self.positions["goal"]:
-            self.positions["goal"] = (np.random.randint(0, self.board_y), np.random.randint(0, self.board_x))
+    def prepare_random_game(self, player_pos: Tuple[int, int]=None, goal_pos: Tuple[int, int]=None):
+
+        if player_pos is None:
+            player_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
+
+        if goal_pos is None:
+            goal_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
+            while goal_pos == player_pos:
+                goal_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
+
+        self.positions["player"] = player_pos
+        self.positions["goal"] = goal_pos
 
         self.generate_board()
 
