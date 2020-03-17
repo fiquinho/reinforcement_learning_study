@@ -10,8 +10,8 @@ from matplotlib import style
 from environments.move_to_goal.move_to_goal import MoveToGoal
 
 
-DEFAULT_BOARD_SIZE = (10, 15)
-GOAL_REWARD = 250
+DEFAULT_BOARD_SIZE = (7, 10)
+GOAL_REWARD = 1
 MOVE_REWARD = -1
 EPISODES = 5000
 GAME_END = 200
@@ -40,6 +40,9 @@ class Agent(object):
 
     def reshape_q_table(self):
         return self.q_table.reshape([self.board_size[0] * self.board_size[1], len(self.game.actions)])
+
+    def flat_q_table(self):
+        return np.reshape(self.q_table, -1)
 
 
 def main():
@@ -128,9 +131,14 @@ def main():
 
     moving_avg = np.convolve(episode_rewards, np.ones((SHOW_EVERY,))/SHOW_EVERY, mode='valid')
 
+    plt.figure(figsize=(10, 5))
+    # Moving average plot
+    plt.subplot(121)
+
     plt.plot([i for i in range(len(moving_avg))], moving_avg)
     plt.ylabel(f"Reward {SHOW_EVERY}ma")
     plt.xlabel("episode #")
+    plt.title("Reward moving average")
     text_x = int(len(moving_avg) * 0.6)
     text_y = (max(moving_avg) + min(moving_avg)) // 2
     plt.text(text_x, text_y,
@@ -138,7 +146,15 @@ def main():
              f"Move reward: {MOVE_REWARD}\n",
              fontweight='bold',
              bbox={"facecolor": "orange", "alpha": 0.5, "pad": 5})
+
+    plt.subplot(122)
+    flat_qtable = test_agent.flat_q_table()
+    plt.hist(flat_qtable, bins=20)
+    plt.title("Deviations histogram")
+
     plt.show()
+
+    print(test_agent.q_table.transpose([1, 0, 2]))
 
 
 if __name__ == '__main__':
