@@ -16,7 +16,6 @@ MOVE_REWARD = -1
 ENEMY_REWARD = -20
 EPISODES = 40000
 GAME_END = 200
-SHOW_EVERY = int(EPISODES * 0.1)
 LEARNING_RATE = 0.1
 DISCOUNT = 0.95
 
@@ -59,7 +58,7 @@ def main():
     parser.add_argument("--board_size", type=int, nargs="*", default=DEFAULT_BOARD_SIZE)
     parser.add_argument("--episodes", type=int, default=EPISODES)
     parser.add_argument("--game_end", type=int, default=GAME_END)
-    parser.add_argument("--show_every", type=int, default=SHOW_EVERY)
+    parser.add_argument("--show_every", type=int, default=None)
     parser.add_argument("--plot_game", action="store_true", default=False)
     args = parser.parse_args()
 
@@ -67,6 +66,9 @@ def main():
     if len(board_size) != 2:
         raise ValueError(f"The board size must be 2 values. "
                          f"Found ( {len(board_size)} ) values = {board_size}")
+
+    if args.show_every is None:
+        args.show_every = int(args.episodes * 0.1)
 
     test_game = MoveToGoal(board_size[0], board_size[1], GOAL_REWARD, MOVE_REWARD, ENEMY_REWARD, "random")
     test_game.prepare_game(goal_pos=(board_size[0] - 1, board_size[1] - 1))
@@ -91,9 +93,9 @@ def main():
         if not episode % args.show_every:
             print(f"Showing episode N° {episode}")
             print(f"on #{episode}, epsilon is {epsilon}")
-            print(f"{SHOW_EVERY} ep mean: {np.mean(episode_rewards[-SHOW_EVERY:])}")
-            batch_wins = np.sum(episodes_wins[-SHOW_EVERY:])
-            print(f"Wins in last {SHOW_EVERY} episodes = {batch_wins}")
+            print(f"{args.show_every} ep mean: {np.mean(episode_rewards[-args.show_every:])}")
+            batch_wins = np.sum(episodes_wins[-args.show_every:])
+            print(f"Wins in last {args.show_every} episodes = {batch_wins}")
             show = True
         else:
             show = False
@@ -139,21 +141,22 @@ def main():
 
         episode_rewards.append(episode_reward)
 
-    moving_avg = np.convolve(episode_rewards, np.ones((SHOW_EVERY,))/SHOW_EVERY, mode='valid')
+    moving_avg = np.convolve(episode_rewards, np.ones((args.show_every,))/args.show_every, mode='valid')
 
     plt.figure(figsize=(10, 5))
     # Moving average plot
     plt.subplot(121)
 
     plt.plot([i for i in range(len(moving_avg))], moving_avg)
-    plt.ylabel(f"Reward {SHOW_EVERY}ma")
+    plt.ylabel(f"Reward {args.show_every}ma")
     plt.xlabel("episode #")
     plt.title("Reward moving average")
-    text_x = int(len(moving_avg) * 0.6)
+    text_x = int(len(moving_avg) * 0.4)
     text_y = (max(moving_avg) + min(moving_avg)) // 2
     plt.text(text_x, text_y,
              f"Goal reward: {GOAL_REWARD}\n"
-             f"Move reward: {MOVE_REWARD}\n",
+             f"Move reward: {MOVE_REWARD}\n"
+             f"Enemy reward: {ENEMY_REWARD}",
              fontweight='bold',
              bbox={"facecolor": "orange", "alpha": 0.5, "pad": 5})
 
