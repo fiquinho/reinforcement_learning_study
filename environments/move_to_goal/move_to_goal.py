@@ -53,7 +53,7 @@ class MoveToGoal(object):
         self.generate_board()
 
     def display_game(self):
-        board_image = np.transpose(self.board, (1, 0, 2))
+        board_image = np.flip(np.transpose(self.board, (1, 0, 2)), 0)
 
         img = Image.fromarray(board_image, 'RGB')
         img = img.resize((self.board_x * 20, self.board_y * 20), cv2.INTER_AREA)

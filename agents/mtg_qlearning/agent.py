@@ -150,7 +150,7 @@ def main():
     plt.subplot(122)
     flat_qtable = test_agent.flat_q_table()
     plt.hist(flat_qtable, bins=20)
-    plt.title("Deviations histogram")
+    plt.title("Q table values - Histogram")
 
     plt.show()
 
