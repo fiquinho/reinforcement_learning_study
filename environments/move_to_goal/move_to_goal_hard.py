@@ -18,14 +18,16 @@ class GameObject(object):
 
 class MoveToGoal(object):
 
-    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int, enemy_reward: int,
-                 enemy_movement: str="random"):
+    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int,
+                 enemy_reward: int, game_end: int, enemy_movement: str="random"):
 
         self.board_x = board_x
         self.board_y = board_y
         self.goal_reward = goal_reward
         self.move_reward = move_reward
         self.enemy_reward = enemy_reward
+        self.game_end = game_end
+        self.steps_played = 0
         self.player = None
         self.goal = None
         self.enemy = None
@@ -35,6 +37,7 @@ class MoveToGoal(object):
                        "goal": (0, 255, 0),
                        "enemy": (0, 0, 255)}
         self.actions = ["up", "right", "down", "left"]
+        self.state_space = 6
 
     def get_board_size(self):
         return self.board_x, self.board_y
@@ -64,6 +67,7 @@ class MoveToGoal(object):
         self.player = GameObject(player_pos, "player")
         self.goal = GameObject(goal_pos, "goal")
         self.enemy = GameObject(enemy_pos, "enemy")
+        self.steps_played = 0
 
         self.generate_board()
 
@@ -116,6 +120,10 @@ class MoveToGoal(object):
         else:
             reward = self.move_reward
             done = False
+
+        self.steps_played += 1
+        if self.steps_played >= self.game_end:
+            done = True
 
         state = self.get_state()
 

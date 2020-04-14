@@ -34,7 +34,7 @@ class MountainCarAgent(object):
     def flat_q_table(self):
         return np.reshape(self.q_table, -1)
 
-    def train_agent(self, episodes: int=25000, epsilon: float=1,
+    def train_agent(self, episodes: int=25000, epsilon: float=1, plot_game: bool=False,
                     show_every: int=None, learning_rate: float=0.1, discount: float=0.95):
 
         episodes_wins = []
@@ -47,7 +47,6 @@ class MountainCarAgent(object):
         for episode in range(episodes):
             self.env.reset()
             done = False
-            steps_played = 0
             show = False
             episode_reward = 0
 
@@ -64,7 +63,7 @@ class MountainCarAgent(object):
 
             while not done:
 
-                if show:
+                if show and plot_game:
                     self.env.render()
 
                 state = self.env.state
@@ -74,7 +73,6 @@ class MountainCarAgent(object):
                     action = np.random.randint(0, self.env.action_space.n)
                 new_state, reward, done, _ = self.env.step(action)
                 episode_reward += reward
-                steps_played += 1
 
                 if done:
                     if new_state[0] >= self.env.goal_position:
