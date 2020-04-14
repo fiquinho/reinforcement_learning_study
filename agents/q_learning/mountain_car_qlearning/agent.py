@@ -1,8 +1,15 @@
+import argparse
 from typing import Tuple
 
 import gym
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+EPISODES = 40000
+LEARNING_RATE = 0.1
+DISCOUNT = 0.95
+EPSILON = 1
 
 
 class MountainCarAgent(object):
@@ -119,8 +126,19 @@ class MountainCarAgent(object):
 
 
 def main():
-    agent = MountainCarAgent((20, 20))
-    agent.train_agent(show_every=2000, episodes=20000)
+    parser = argparse.ArgumentParser(description="Q Learning agent that plays the MoveToGoal hard environment.")
+    parser.add_argument("--episodes", type=int, default=EPISODES)
+    parser.add_argument("--show_every", type=int, default=None, help="Defaults to 10% of the episodes.")
+    parser.add_argument("--epsilon", type=int, default=EPSILON)
+    parser.add_argument("--discount", type=int, default=DISCOUNT)
+    parser.add_argument("--learning_rate", type=float, default=LEARNING_RATE)
+    parser.add_argument("--plot_game", action="store_true", default=False)
+    args = parser.parse_args()
+
+    test_agent = MountainCarAgent((20, 20))
+    test_agent.train_agent(episodes=args.episodes, epsilon=args.epsilon, plot_game=args.plot_game,
+                           show_every=args.show_every, learning_rate=args.learning_rate,
+                           discount=args.discount)
 
 
 if __name__ == '__main__':
