@@ -7,13 +7,15 @@ from PIL import Image
 
 class MoveToGoal(object):
 
-    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int):
+    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int, game_end: int):
 
         self.board_x = board_x
         self.board_y = board_y
         self.goal_reward = goal_reward
         self.move_reward = move_reward
+        self.game_end = game_end
         self.board = None
+        self.steps_played = 0
         self.positions = {"player": None, "goal": None}
         self.colors = {"player": (255, 150, 0),
                        "goal": (0, 255, 0)}
@@ -27,7 +29,7 @@ class MoveToGoal(object):
         self.board[self.positions["player"]] = self.colors["player"]
         self.board[self.positions["goal"]] = self.colors["goal"]
 
-    def prepare_random_game(self, player_pos: Tuple[int, int]=None, goal_pos: Tuple[int, int]=None):
+    def prepare_game(self, player_pos: Tuple[int, int]=None, goal_pos: Tuple[int, int]=None):
 
         if player_pos is None:
             player_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
@@ -39,16 +41,7 @@ class MoveToGoal(object):
 
         self.positions["player"] = player_pos
         self.positions["goal"] = goal_pos
-
-        self.generate_board()
-
-    def prepare_game(self, player_pos: Tuple[int, int], goal_pos: Tuple[int, int]):
-
-        if player_pos == goal_pos:
-            raise ValueError(f"The goal and player position can't be the same. Both are {player_pos}")
-
-        self.positions["player"] = player_pos
-        self.positions["goal"] = goal_pos
+        self.steps_played = 0
 
         self.generate_board()
 
@@ -96,6 +89,10 @@ class MoveToGoal(object):
         else:
             reward = self.move_reward
             done = False
+
+        self.steps_played += 1
+        if self.steps_played >= self.game_end:
+            done = True
 
         state = self.get_state()
 

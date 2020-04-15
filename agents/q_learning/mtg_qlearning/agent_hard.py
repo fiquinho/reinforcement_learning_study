@@ -57,11 +57,10 @@ class MoveToGoalAgent(object):
         end_epsilon_decay = episodes // 2
         epsilon_decay = 0.9998
 
-        print("Training the agent")
-
         episodes_wins = []
         episode_rewards = []
 
+        print("Starting training...")
         for episode in range(episodes):
 
             self.game.prepare_game(goal_pos=(self.game.board_x - 1, self.game.board_y - 1),

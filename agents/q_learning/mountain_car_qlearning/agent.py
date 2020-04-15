@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-EPISODES = 40000
+EPISODES = 20000
 LEARNING_RATE = 0.1
 DISCOUNT = 0.95
 EPSILON = 1
@@ -51,6 +51,7 @@ class MountainCarAgent(object):
         if show_every is None:
             show_every = episodes
 
+        print("Starting training...")
         for episode in range(episodes):
             self.env.reset()
             done = False
