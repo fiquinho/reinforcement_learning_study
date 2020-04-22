@@ -124,7 +124,7 @@ class Agent(object):
 
         plt.subplot(122)
         flat_qtable = self.flat_q_table()
-        plt.hist(flat_qtable, bins=200)
+        plt.hist(flat_qtable, bins=len(flat_qtable) // 10)
         plt.title("Q table values - Histogram")
 
         plt.show()

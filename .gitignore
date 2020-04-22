@@ -1,2 +1,5 @@
 .idea/
 local_experiments/
+.ipynb_checkpoints/
+
+*.xlsx

@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-EPISODES = 20000
+EPISODES = 5000
 LEARNING_RATE = 0.1
 DISCOUNT = 0.95
 EPSILON = 1
@@ -42,7 +42,8 @@ class MountainCarAgent(object):
         return np.reshape(self.q_table, -1)
 
     def train_agent(self, episodes: int=25000, epsilon: float=1, plot_game: bool=False,
-                    show_every: int=None, learning_rate: float=0.1, discount: float=0.95):
+                    show_every: int=None, learning_rate: float=0.1, discount: float=0.95,
+                    cycles: int=1):
 
         episodes_wins = []
         episodes_rewards = []
@@ -52,54 +53,56 @@ class MountainCarAgent(object):
             show_every = episodes
 
         print("Starting training...")
-        for episode in range(episodes):
-            self.env.reset()
-            done = False
-            show = False
-            episode_reward = 0
+        for cycle in range(cycles):
+            current_epsilon = epsilon
+            for episode in range(episodes):
+                self.env.reset()
+                done = False
+                show = False
+                episode_reward = 0
 
-            if episode > 0:
-                if not episode % show_every:
-                    print(f"Showing episode N° {episode}")
-                    print(f"on #{episode}, epsilon is {epsilon}")
-                    print(f"{show_every} ep mean: {np.mean(episodes_rewards[-show_every:])}")
-                    batch_wins = np.sum(episodes_wins[-show_every:])
-                    print(f"Wins in last {show_every} episodes = {batch_wins}")
-                    show = True
-                else:
-                    show = False
-
-            while not done:
-
-                if show and plot_game:
-                    self.env.render()
-
-                state = self.env.state
-                if np.random.random() > epsilon:
-                    action = self.produce_action(state)
-                else:
-                    action = np.random.randint(0, self.env.action_space.n)
-                new_state, reward, done, _ = self.env.step(action)
-                episode_reward += reward
-
-                if done:
-                    if new_state[0] >= self.env.goal_position:
-                        self.q_table[self.get_discrete_state(state) + (action,)] = 0
-                        episodes_wins.append(True)
+                if episode > 0:
+                    if not episode % show_every:
+                        print(f"Showing episode N° {episode} of cycle {cycle}")
+                        print(f"Epsilon is {current_epsilon}")
+                        print(f"Last {show_every} episodes reward mean: {np.mean(episodes_rewards[-show_every:])}")
+                        batch_wins = np.sum(episodes_wins[-show_every:])
+                        print(f"Wins in last {show_every} episodes = {batch_wins}")
+                        show = True
                     else:
-                        episodes_wins.append(False)
-                else:
-                    max_future_q = np.max(self.q_table[self.get_discrete_state(new_state)])
-                    current_q = self.q_table[self.get_discrete_state(state) + (action,)]
+                        show = False
 
-                    new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount * max_future_q)
+                while not done:
 
-                    self.q_table[self.get_discrete_state(state) + (action,)] = new_q
+                    if show and plot_game:
+                        self.env.render()
 
-            if end_epsilon_decay >= episode >= 0:
-                epsilon -= epsilon_decay_value
+                    state = self.env.state
+                    if np.random.random() > current_epsilon:
+                        action = self.produce_action(state)
+                    else:
+                        action = np.random.randint(0, self.env.action_space.n)
+                    new_state, reward, done, _ = self.env.step(action)
+                    episode_reward += reward
 
-            episodes_rewards.append(episode_reward)
+                    if done:
+                        if new_state[0] >= self.env.goal_position:
+                            self.q_table[self.get_discrete_state(state) + (action,)] = 0
+                            episodes_wins.append(True)
+                        else:
+                            episodes_wins.append(False)
+                    else:
+                        max_future_q = np.max(self.q_table[self.get_discrete_state(new_state)])
+                        current_q = self.q_table[self.get_discrete_state(state) + (action,)]
+
+                        new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount * max_future_q)
+
+                        self.q_table[self.get_discrete_state(state) + (action,)] = new_q
+
+                if end_epsilon_decay >= episode >= 0:
+                    current_epsilon -= epsilon_decay_value
+
+                episodes_rewards.append(episode_reward)
 
         moving_avg = np.convolve(episodes_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
