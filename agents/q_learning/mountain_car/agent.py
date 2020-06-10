@@ -119,12 +119,6 @@ class MountainCarAgent(object):
         plt.ylabel(f"Reward {show_every}ma")
         plt.xlabel("episode #")
         plt.title("Reward moving average")
-        text_x = int(len(moving_avg) * 0.6)
-        text_y = int((max(moving_avg) + min(moving_avg)) * 0.3)
-        plt.text(text_x, text_y,
-                 f"Learning rate: {learning_rate}\n",
-                 fontweight='bold',
-                 bbox={"facecolor": "orange", "alpha": 0.5, "pad": 5})
 
         # plt.subplot(122)
         # flat_qtable = self.flat_q_table()

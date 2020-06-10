@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import style
 
-from environments.move_to_goal.move_to_goal_hard import MoveToGoal
+from environments.move_to_goal.mtg_enemy import MoveToGoalEnemy
 
 
 BOARD_SIZE = (7, 10)
@@ -23,9 +23,9 @@ EPSILON = 1
 style.use("ggplot")
 
 
-class MoveToGoalAgent(object):
+class MoveToGoalEnemyAgent(object):
 
-    def __init__(self, game: MoveToGoal):
+    def __init__(self, game: MoveToGoalEnemy):
 
         self.game = game
         self.board_size = self.game.get_board_size()
@@ -162,10 +162,10 @@ def main():
     if args.show_every is None:
         args.show_every = int(args.episodes * 0.1)
 
-    test_game = MoveToGoal(board_x=board_size[0], board_y=board_size[1], goal_reward=args.goal_reward,
-                           move_reward=args.move_reward, game_end=args.game_end, enemy_reward=args.enemy_reward,
-                           enemy_movement="random")
-    test_agent = MoveToGoalAgent(game=test_game)
+    test_game = MoveToGoalEnemy(board_x=board_size[0], board_y=board_size[1], goal_reward=args.goal_reward,
+                                move_reward=args.move_reward, game_end=args.game_end, enemy_reward=args.enemy_reward,
+                                enemy_movement="random")
+    test_agent = MoveToGoalEnemyAgent(game=test_game)
     test_agent.train_agent(episodes=args.episodes, epsilon=args.epsilon, plot_game=args.plot_game,
                            show_every=args.show_every, learning_rate=args.learning_rate,
                            discount=args.discount)

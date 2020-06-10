@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import style
 
-from environments.move_to_goal.move_to_goal import MoveToGoal
+from environments.move_to_goal.mtg_simple import MoveToGoalSimple
 
 
 BOARD_SIZE = (7, 10)
@@ -23,9 +23,9 @@ DISCOUNT = 0.95
 style.use("ggplot")
 
 
-class Agent(object):
+class MoveToGoalSimpleAgent(object):
 
-    def __init__(self, game: MoveToGoal):
+    def __init__(self, game: MoveToGoalSimple):
 
         self.game = game
         self.board_size = self.game.get_board_size()
@@ -78,24 +78,10 @@ class Agent(object):
 
                     time.sleep(.01)
 
-                board_state = self.game.get_state()
-
-                if np.random.random() > epsilon:
-                    action = self.produce_action(board_state)
-                else:
-                    action = np.random.randint(0, len(self.game.actions))
-                new_board_state, reward, done = self.game.step(action)
+                new_board_state, reward, done = self.training_step(epsilon, learning_rate, discount)
 
                 if done:
-                    self.q_table[board_state[0] + (action,)] = reward
                     episodes_wins.append(reward == self.game.goal_reward)
-                else:
-                    max_future_q = np.max(self.q_table[new_board_state[0]])
-                    current_q = self.q_table[board_state[0] + (action,)]
-
-                    new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount * max_future_q)
-
-                    self.q_table[board_state[0] + (action,)] = new_q
 
                 episode_reward += reward
 
@@ -129,6 +115,28 @@ class Agent(object):
 
         plt.show()
 
+    def training_step(self, epsilon, learning_rate, discount):
+
+        board_state = self.game.get_state()
+
+        if np.random.random() > epsilon:
+            action = self.produce_action(board_state)
+        else:
+            action = np.random.randint(0, len(self.game.actions))
+        new_board_state, reward, done = self.game.step(action)
+
+        if done:
+            self.q_table[board_state[0] + (action,)] = reward
+        else:
+            max_future_q = np.max(self.q_table[new_board_state[0]])
+            current_q = self.q_table[board_state[0] + (action,)]
+
+            new_q = (1 - learning_rate) * current_q + learning_rate * (reward + discount * max_future_q)
+
+            self.q_table[board_state[0] + (action,)] = new_q
+
+        return new_board_state, reward, done
+
 
 def main():
     parser = argparse.ArgumentParser(description="Q Learning agent that plays the MoveToGoal hard environment.")
@@ -152,9 +160,9 @@ def main():
     if args.show_every is None:
         args.show_every = int(args.episodes * 0.1)
 
-    test_game = MoveToGoal(board_x=board_size[0], board_y=board_size[1], goal_reward=args.goal_reward,
-                           move_reward=args.move_reward, game_end=args.game_end)
-    test_agent = Agent(game=test_game)
+    test_game = MoveToGoalSimple(board_x=board_size[0], board_y=board_size[1], goal_reward=args.goal_reward,
+                                 move_reward=args.move_reward, game_end=args.game_end)
+    test_agent = MoveToGoalSimpleAgent(game=test_game)
     test_agent.train_agent(episodes=args.episodes, epsilon=args.epsilon, plot_game=args.plot_game,
                            show_every=args.show_every, learning_rate=args.learning_rate,
                            discount=args.discount)

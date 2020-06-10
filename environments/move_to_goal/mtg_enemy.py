@@ -1,52 +1,30 @@
 from typing import Tuple
 
-import cv2
 import numpy as np
-from PIL import Image
+
+from .move_to_goal import GameObject, MoveToGoal, DEFAULT_COLORS
 
 
-class GameObject(object):
-
-    def __init__(self, position: Tuple[int, int], name: str):
-
-        self.position = position
-        self.name = name
-
-    def change_position(self, new_position: Tuple[int, int]):
-        self.position = new_position
-
-
-class MoveToGoal(object):
+class MoveToGoalEnemy(MoveToGoal):
 
     def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int,
                  enemy_reward: int, game_end: int, enemy_movement: str="random"):
 
-        self.board_x = board_x
-        self.board_y = board_y
-        self.goal_reward = goal_reward
-        self.move_reward = move_reward
         self.enemy_reward = enemy_reward
-        self.game_end = game_end
-        self.steps_played = 0
         self.player = None
         self.goal = None
         self.enemy = None
-        self.board = None
         self.enemy_movement = enemy_movement
-        self.colors = {"player": (255, 150, 0),
-                       "goal": (0, 255, 0),
-                       "enemy": (0, 0, 255)}
-        self.actions = ["up", "right", "down", "left"]
         self.state_space = 6
 
-    def get_board_size(self):
-        return self.board_x, self.board_y
+        MoveToGoal.__init__(self, board_x, board_y, goal_reward, move_reward, game_end)
 
-    def generate_board(self):
-        self.board = np.zeros((self.board_x, self.board_y, 3), dtype=np.uint8)
-        self.board[self.player.position] = self.colors["player"]
-        self.board[self.goal.position] = self.colors["goal"]
-        self.board[self.enemy.position] = self.colors["enemy"]
+    def update_board(self):
+        board = np.zeros((self.board_x, self.board_y, 3), dtype=np.uint8)
+        board[self.player.position] = self.player.color
+        board[self.goal.position] = self.goal.color
+        board[self.enemy.position] = self.enemy.color
+        return board
 
     def prepare_game(self, player_pos: Tuple[int, int]=None, goal_pos: Tuple[int, int]=None,
                      enemy_pos: Tuple[int, int]=None):
@@ -64,19 +42,12 @@ class MoveToGoal(object):
             while enemy_pos == player_pos or enemy_pos == goal_pos:
                 enemy_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
 
-        self.player = GameObject(player_pos, "player")
-        self.goal = GameObject(goal_pos, "goal")
-        self.enemy = GameObject(enemy_pos, "enemy")
+        self.player = GameObject(player_pos, "player", DEFAULT_COLORS["player"])
+        self.goal = GameObject(goal_pos, "goal", DEFAULT_COLORS["goal"])
+        self.enemy = GameObject(enemy_pos, "enemy", DEFAULT_COLORS["enemy"])
         self.steps_played = 0
 
-        self.generate_board()
-
-    def display_game(self):
-        board_image = np.flip(np.transpose(self.board, (1, 0, 2)), 0)
-
-        img = Image.fromarray(board_image, 'RGB')
-        img = img.resize((self.board_x * 20, self.board_y * 20), cv2.INTER_AREA)
-        cv2.imshow("image", np.array(img))
+        self.board = self.update_board()
 
     def execute_object_action(self, game_object: GameObject, action: int):
         action = self.actions[action]
@@ -99,7 +70,7 @@ class MoveToGoal(object):
 
         game_object.change_position((game_object_x, game_object_y))
 
-        self.generate_board()
+        self.board = self.update_board()
 
     def get_state(self) -> Tuple[int, int, int, int, int, int]:
         return self.player.position + self.goal.position + self.enemy.position
