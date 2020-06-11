@@ -8,7 +8,7 @@ from .move_to_goal import GameObject, MoveToGoal, DEFAULT_COLORS
 class MoveToGoalSimple(MoveToGoal):
 
     def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int, game_end: int,
-                 player_initial_pos: int=None, goal_initial_pos: int=None):
+                 player_initial_pos: Tuple[int, int]=None, goal_initial_pos: Tuple[int, int]=None):
 
         self.board_x = board_x
         self.board_y = board_y

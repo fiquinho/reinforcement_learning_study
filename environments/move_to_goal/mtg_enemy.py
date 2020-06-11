@@ -8,12 +8,17 @@ from .move_to_goal import GameObject, MoveToGoal, DEFAULT_COLORS
 class MoveToGoalEnemy(MoveToGoal):
 
     def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int,
-                 enemy_reward: int, game_end: int, enemy_movement: str="random"):
+                 enemy_reward: int, game_end: int, enemy_movement: str="random",
+                 player_initial_pos: Tuple[int, int]=None, goal_initial_pos: Tuple[int, int]=None,
+                 enemy_initial_pos: Tuple[int, int]=None):
 
         self.enemy_reward = enemy_reward
         self.player = None
         self.goal = None
         self.enemy = None
+        self.player_initial_pos = player_initial_pos
+        self.goal_initial_pos = goal_initial_pos
+        self.enemy_initial_pos = enemy_initial_pos
         self.enemy_movement = enemy_movement
         self.state_space = 6
 
@@ -26,21 +31,26 @@ class MoveToGoalEnemy(MoveToGoal):
         board[self.enemy.position] = self.enemy.color
         return board
 
-    def prepare_game(self, player_pos: Tuple[int, int]=None, goal_pos: Tuple[int, int]=None,
-                     enemy_pos: Tuple[int, int]=None):
+    def prepare_game(self):
 
-        if player_pos is None:
+        if self.player_initial_pos is None:
             player_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
+        else:
+            player_pos = self.player_initial_pos
 
-        if goal_pos is None:
+        if self.goal_initial_pos is None:
             goal_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
-            while goal_pos == player_pos:
+            while goal_pos == self.player_initial_pos:
                 goal_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
+        else:
+            goal_pos = self.goal_initial_pos
 
-        if enemy_pos is None:
+        if self.enemy_initial_pos is None:
             enemy_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
-            while enemy_pos == player_pos or enemy_pos == goal_pos:
+            while enemy_pos == self.player_initial_pos or enemy_pos == self.goal_initial_pos:
                 enemy_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
+        else:
+            enemy_pos = self.enemy_initial_pos
 
         self.player = GameObject(player_pos, "player", DEFAULT_COLORS["player"])
         self.goal = GameObject(goal_pos, "goal", DEFAULT_COLORS["goal"])

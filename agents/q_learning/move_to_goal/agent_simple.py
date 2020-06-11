@@ -36,9 +36,6 @@ class MoveToGoalSimpleAgent(object):
         action = np.argmax(self.q_table[state[0]])
         return action
 
-    def reshape_q_table(self):
-        return self.q_table.reshape([self.board_size[0] * self.board_size[1], len(self.game.actions)])
-
     def flat_q_table(self):
         return np.reshape(self.q_table, -1)
 
