@@ -22,7 +22,8 @@ class MoveToGoalEnemy(MoveToGoal):
         self.enemy_movement = enemy_movement
         self.state_space = 6
 
-        MoveToGoal.__init__(self, board_x, board_y, goal_reward, move_reward, game_end)
+        MoveToGoal.__init__(self, board_x, board_y, goal_reward, move_reward,
+                            game_end, self.state_space)
 
     def update_board(self):
         board = np.zeros((self.board_x, self.board_y, 3), dtype=np.uint8)
@@ -82,11 +83,10 @@ class MoveToGoalEnemy(MoveToGoal):
 
         self.board = self.update_board()
 
-    def get_state(self) -> Tuple[int, int, int, int, int, int]:
+    def get_state(self) -> tuple:
         return self.player.position + self.goal.position + self.enemy.position
 
-    def step(self, player_action: int) -> (Tuple[Tuple[int, int], Tuple[int, int],
-                                                 Tuple[int, int]], float, bool):
+    def step(self, player_action: int) -> (tuple, float, bool):
 
         self.execute_object_action(self.player, player_action)
         if self.enemy_movement == "random":

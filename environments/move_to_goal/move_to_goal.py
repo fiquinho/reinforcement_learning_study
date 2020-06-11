@@ -44,7 +44,8 @@ class MoveToGoal(object):
     All different versions of the game should be constructed using this.
     """
 
-    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int, game_end: int):
+    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int,
+                 game_end: int, state_space: int):
         """
         :param board_x: Board width
         :param board_y: Board height
@@ -59,15 +60,17 @@ class MoveToGoal(object):
         self.game_end = game_end
         self.steps_played = 0
         self.board = None
+        self.state_space = state_space
         self.prepare_game()
         self.actions = ["up", "right", "down", "left"]
 
     def get_board_size(self) -> Tuple[int, int]:
         return self.board_x, self.board_y
 
-    def display_game(self):
+    def display_game(self, title: str=None):
         win = pygame.display.set_mode((self.board_x * PYGAME_SCALE, self.board_y * PYGAME_SCALE))
-        pygame.display.set_caption("Move to goal")
+        title = "Move to goal" if title is None else title
+        pygame.display.set_caption(title)
 
         board_image = np.flip(self.board, 1)
         draw_objects = []
