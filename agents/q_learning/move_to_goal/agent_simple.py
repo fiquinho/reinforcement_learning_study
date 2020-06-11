@@ -2,7 +2,6 @@ import time
 import argparse
 from typing import Tuple
 
-import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import style
@@ -55,8 +54,7 @@ class MoveToGoalSimpleAgent(object):
         print("Starting training...")
         for episode in range(episodes):
 
-            self.game.prepare_game(goal_pos=(self.game.board_x - 1, self.game.board_y - 1),
-                                   player_pos=(0, 0))
+            self.game.prepare_game()
             if not episode % show_every and episode > 0:
                 print(f"Showing episode N° {episode}")
                 print(f"on #{episode}, epsilon is {epsilon}")
@@ -73,10 +71,7 @@ class MoveToGoalSimpleAgent(object):
 
                 if show and plot_game:
                     self.game.display_game()
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-
-                    time.sleep(.01)
+                    time.sleep(.05)
 
                 new_board_state, reward, done = self.training_step(epsilon, learning_rate, discount)
 
@@ -140,6 +135,8 @@ class MoveToGoalSimpleAgent(object):
 
 def main():
     parser = argparse.ArgumentParser(description="Q Learning agent that plays the MoveToGoal hard environment.")
+    parser.add_argument("--player_pos", type=int, nargs="*", default=None)
+    parser.add_argument("--goal_pos", type=int, nargs="*", default=None)
     parser.add_argument("--board_size", type=int, nargs="*", default=BOARD_SIZE)
     parser.add_argument("--episodes", type=int, default=EPISODES)
     parser.add_argument("--show_every", type=int, default=None, help="Defaults to 10% of the episodes.")
@@ -157,11 +154,19 @@ def main():
         raise ValueError(f"The board size must be 2 values. "
                          f"Found ( {len(board_size)} ) values = {board_size}")
 
+    player_pos = tuple(args.player_pos) if args.player_pos is not None else None
+    goal_pos = tuple(args.goal_pos) if args.goal_pos is not None else None
+
     if args.show_every is None:
         args.show_every = int(args.episodes * 0.1)
 
-    test_game = MoveToGoalSimple(board_x=board_size[0], board_y=board_size[1], goal_reward=args.goal_reward,
-                                 move_reward=args.move_reward, game_end=args.game_end)
+    test_game = MoveToGoalSimple(board_x=board_size[0],
+                                 board_y=board_size[1],
+                                 goal_reward=args.goal_reward,
+                                 move_reward=args.move_reward,
+                                 game_end=args.game_end,
+                                 player_initial_pos=player_pos,
+                                 goal_initial_pos=goal_pos)
     test_agent = MoveToGoalSimpleAgent(game=test_game)
     test_agent.train_agent(episodes=args.episodes, epsilon=args.epsilon, plot_game=args.plot_game,
                            show_every=args.show_every, learning_rate=args.learning_rate,

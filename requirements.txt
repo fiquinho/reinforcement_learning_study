@@ -1,5 +1,4 @@
 numpy >= 1.18.1
-opencv-python
 matplotlib
-Pillow
 gym
+pygame

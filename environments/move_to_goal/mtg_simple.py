@@ -7,11 +7,14 @@ from .move_to_goal import GameObject, MoveToGoal, DEFAULT_COLORS
 
 class MoveToGoalSimple(MoveToGoal):
 
-    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int, game_end: int):
+    def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int, game_end: int,
+                 player_initial_pos: int=None, goal_initial_pos: int=None):
 
         self.board_x = board_x
         self.board_y = board_y
         self.state_space = 2
+        self.player_initial_pos = player_initial_pos
+        self.goal_initial_pos = goal_initial_pos
         self.player = None
         self.goal = None
 
@@ -23,15 +26,19 @@ class MoveToGoalSimple(MoveToGoal):
         board[self.goal.position] = self.goal.color
         return board
 
-    def prepare_game(self, player_pos: Tuple[int, int]=None, goal_pos: Tuple[int, int]=None):
+    def prepare_game(self):
 
-        if player_pos is None:
+        if self.player_initial_pos is None:
             player_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
+        else:
+            player_pos = self.player_initial_pos
 
-        if goal_pos is None:
+        if self.goal_initial_pos is None:
             goal_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
-            while goal_pos == player_pos:
+            while goal_pos == self.player_initial_pos:
                 goal_pos = (np.random.randint(0, self.board_x), np.random.randint(0, self.board_y))
+        else:
+            goal_pos = self.goal_initial_pos
 
         self.player = GameObject(player_pos, "player", DEFAULT_COLORS["player"])
         self.goal = GameObject(goal_pos, "goal", DEFAULT_COLORS["goal"])

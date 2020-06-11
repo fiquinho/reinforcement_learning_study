@@ -1,13 +1,15 @@
+import os
 from typing import Tuple
 
-import cv2
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame
 import numpy as np
-from PIL import Image
 
 
-DEFAULT_COLORS = {"player": (255, 0, 0),
+PYGAME_SCALE = 50
+DEFAULT_COLORS = {"player": (0, 0, 255),
                   "goal": (0, 255, 0),
-                  "enemy": (0, 0, 255)}
+                  "enemy": (255, 0, 0)}
 
 
 class GameObject(object):
@@ -64,11 +66,21 @@ class MoveToGoal(object):
         return self.board_x, self.board_y
 
     def display_game(self):
-        board_image = np.flip(np.transpose(self.board, (1, 0, 2)), 0)
+        win = pygame.display.set_mode((self.board_x * PYGAME_SCALE, self.board_y * PYGAME_SCALE))
+        pygame.display.set_caption("Move to goal")
 
-        img = Image.fromarray(board_image, 'RGB')
-        img = img.resize((self.board_x * 20, self.board_y * 20), cv2.INTER_AREA)
-        cv2.imshow("image", np.array(img))
+        board_image = np.flip(self.board, 1)
+        draw_objects = []
+        for i in range(self.board_x):
+            for j in range(self.board_y):
+                if not (board_image[i, j] == (0, 0, 0)).all():
+                    draw_objects.append((i, j, board_image[i, j]))
+
+        for item in draw_objects:
+            pygame.draw.rect(win, item[2], (item[0] * PYGAME_SCALE, item[1] * PYGAME_SCALE,
+                                            PYGAME_SCALE, PYGAME_SCALE))
+
+        pygame.display.update()
 
     def update_board(self):
         raise NotImplementedError()
