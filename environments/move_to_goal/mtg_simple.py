@@ -42,26 +42,43 @@ class MoveToGoalSimple(MoveToGoal):
 
     def execute_object_action(self, game_object: GameObject, action: int):
         action = self.actions[action]
-        game_object_x, game_object_y = game_object.position
+        move_results = self.get_move_results(game_object.position, action)
+        game_object.change_position(move_results)
 
+        self.board = self.update_board()
+
+    def get_move_results(self, original_position: tuple, action: str) -> tuple:
+        x, y = original_position
+        new_x, new_y = original_position
         if action == "up":
-            if game_object_y < self.board_y - 1:
-                game_object_y += 1
+            if y < self.board_y - 1:
+                new_y += 1
         elif action == "right":
-            if game_object_x < self.board_x - 1:
-                game_object_x += 1
+            if x < self.board_x - 1:
+                new_x += 1
         elif action == "down":
-            if game_object_y > 0:
-                game_object_y -= 1
+            if y > 0:
+                new_y -= 1
         elif action == "left":
-            if game_object_x > 0:
-                game_object_x -= 1
+            if x > 0:
+                new_x -= 1
         else:
             raise ValueError(f"Wrong action: {action}")
 
-        game_object.change_position((game_object_x, game_object_y))
+        return new_x, new_y
 
-        self.board = self.update_board()
+    def specific_step_results(self, state: tuple, action: int):
+        action = self.actions[action]
+        new_position = self.get_move_results(state, action)
+
+        if new_position == self.goal.position:
+            reward = self.goal_reward
+            done = True
+        else:
+            reward = self.move_reward
+            done = False
+
+        return new_position, reward, done
 
     def get_state(self) -> tuple:
         return self.player.position

@@ -63,6 +63,7 @@ class MoveToGoal(object):
         self.state_space = state_space
         self.prepare_game()
         self.actions = ["up", "right", "down", "left"]
+        self.action_space = len(self.actions)
 
     def get_board_size(self) -> Tuple[int, int]:
         return self.board_x, self.board_y
@@ -98,4 +99,7 @@ class MoveToGoal(object):
         raise NotImplementedError()
 
     def step(self, **kwargs):
+        raise NotImplementedError()
+
+    def specific_step_results(self, **kwargs):
         raise NotImplementedError()
