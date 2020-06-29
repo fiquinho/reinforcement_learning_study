@@ -1,6 +1,13 @@
 import argparse
 import logging
+import sys
+import os
+from pathlib import Path
+
 from matplotlib import style
+
+SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
+sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
 from environments.move_to_goal.mtg_simple import MoveToGoalSimple
 from agents.q_learning.move_to_goal.agent import MoveToGoalQAgent
@@ -26,12 +33,17 @@ style.use("ggplot")
 
 def main():
     parser = argparse.ArgumentParser(description="Q Learning agent that plays the MoveToGoal hard environment.")
-    parser.add_argument("--player_pos", type=int, nargs="*", default=None)
-    parser.add_argument("--goal_pos", type=int, nargs="*", default=None)
-    parser.add_argument("--board_size", type=int, nargs="*", default=BOARD_SIZE)
+    parser.add_argument("--board_size", type=int, nargs="*", default=BOARD_SIZE,
+                        help="Board size. X and Y vales. Example: --board_size 6 6")
+    parser.add_argument("--player_pos", type=int, nargs="*", default=None,
+                        help="Player starting position. Defaults to random starting position. "
+                             "Example: --player_pos 0 0")
+    parser.add_argument("--goal_pos", type=int, nargs="*", default=None,
+                        help="Goal starting position. Defaults to top right corner (Max X and Y possible)."
+                             "Example: --goal_pos 4 5")
     parser.add_argument("--episodes", type=int, default=EPISODES)
     parser.add_argument("--cycles", type=int, default=CYCLES)
-    parser.add_argument("--show_every", type=int, default=None, help="Defaults to 10% of the episodes.")
+    parser.add_argument("--show_every", type=int, default=None, help="Defaults to 0.1 of the episodes.")
     parser.add_argument("--goal_reward", type=int, default=GOAL_REWARD)
     parser.add_argument("--move_reward", type=int, default=MOVE_REWARD)
     parser.add_argument("--epsilon", type=int, default=EPSILON)
