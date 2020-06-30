@@ -46,17 +46,28 @@ def main():
     parser.add_argument("--enemy_pos", type=int, nargs="*", default=None,
                         help="Goal starting position. Defaults to random starting position."
                              "Example: --enemy_pos 4 5")
-    parser.add_argument("--episodes", type=int, default=EPISODES)
-    parser.add_argument("--cycles", type=int, default=CYCLES)
-    parser.add_argument("--show_every", type=int, default=None, help="Defaults to 10% of the total episodes.")
-    parser.add_argument("--goal_reward", type=int, default=GOAL_REWARD)
-    parser.add_argument("--move_reward", type=int, default=MOVE_REWARD)
-    parser.add_argument("--enemy_reward", type=int, default=ENEMY_REWARD)
-    parser.add_argument("--epsilon", type=int, default=EPSILON)
-    parser.add_argument("--discount", type=int, default=DISCOUNT)
-    parser.add_argument("--learning_rate", type=float, default=LEARNING_RATE)
-    parser.add_argument("--game_end", type=int, default=GAME_END)
-    parser.add_argument("--plot_game", action="store_true", default=False)
+    parser.add_argument("--episodes", type=int, default=EPISODES,
+                        help="The number of episodes to play in a single cycle.")
+    parser.add_argument("--cycles", type=int, default=CYCLES,
+                        help="The number of episodes to play in a single cycle.")
+    parser.add_argument("--show_every", type=int, default=None,
+                        help="Defaults to 10% of the total episodes.")
+    parser.add_argument("--goal_reward", type=int, default=GOAL_REWARD,
+                        help="The reward when the player reaches the goal.")
+    parser.add_argument("--move_reward", type=int, default=MOVE_REWARD,
+                        help="The reward when the player moves and doesn't reach the goal.")
+    parser.add_argument("--enemy_reward", type=int, default=ENEMY_REWARD,
+                        help="The reward when the agent hits the enemy.")
+    parser.add_argument("--epsilon", type=int, default=EPSILON,
+                        help="The starting exploration rate. In range [0, 1).")
+    parser.add_argument("--discount", type=int, default=DISCOUNT,
+                        help="The cumulative reward discount.")
+    parser.add_argument("--learning_rate", type=float, default=LEARNING_RATE,
+                        help="The learning rate to use during training.")
+    parser.add_argument("--game_end", type=int, default=GAME_END,
+                        help="How many steps before the game ends.")
+    parser.add_argument("--plot_game", action="store_true", default=False,
+                        help="Activate to plot the agent playing the game during training.")
     args = parser.parse_args()
 
     board_size = args.board_size
