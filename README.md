@@ -9,7 +9,7 @@ There are a number of different agents to train with different RL techniques.
 ## Q-Learning
 #### Move to Goal
 Check the [available agents](https://github.com/fiquinho/reinforcement_learning_study/tree/master/agents/q_learning/move_to_goal)
-trained to play different versions of this environment using Q-Learning.
+that can be trained to play different versions of this environment using Q-Learning.
 
 # References
  - https://pythonprogramming.net/q-learning-reinforcement-learning-python-tutorial/
