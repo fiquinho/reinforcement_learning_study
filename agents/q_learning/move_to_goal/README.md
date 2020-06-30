@@ -6,7 +6,7 @@ A couple of versions of the game exists to try different things with scalable di
 
 There is an agent training script for each current version of the game.
 The agents use Q-Learning to come up with a good strategy to play the game.
-The available training at the moment are:
+The available training scripts at the moment are:
 
     python agent_simple.py
     
