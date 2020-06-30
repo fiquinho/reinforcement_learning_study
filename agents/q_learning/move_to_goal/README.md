@@ -1,19 +1,19 @@
-# Q-Learning
-
-## Move to Goal
+# Move to Goal using Q-Learning
 This environment was created for this project. The game is a grid and the objective is to reach the goal.
 A couple of versions of the game exists to try different things with scalable difficulties.
 
 ![MTG Enemy display](https://i.ibb.co/fN9ZB5L/image.png)
 
 There is an agent training script for each current version of the game.
+The agents use Q-Learning to come up with a good strategy to play the game.
+The available training at the moment are:
 
-    python move_to_goal/agent_simple.py
+    python agent_simple.py
     
-    python move_to_goal/agent_enemy.py
+    python agent_enemy.py
 
-To run these scripts please use the help flag to check the available configurations.
+To run your own experiments please use the help flag to check the available configurations.
     
-    python move_to_goal/agent_simple.py -h
+    python agent_simple.py -h
 
-    python move_to_goal/agent_enemy.py -h
+    python agent_enemy.py -h
