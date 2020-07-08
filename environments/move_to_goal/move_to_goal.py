@@ -68,10 +68,42 @@ class MoveToGoal(object):
     def get_board_size(self) -> Tuple[int, int]:
         return self.board_x, self.board_y
 
-    def display_game(self, title: str=None):
+    def display_game(self, title: str = None, q_table=None):
         win = pygame.display.set_mode((self.board_x * PYGAME_SCALE, self.board_y * PYGAME_SCALE))
         title = "Move to goal" if title is None else title
         pygame.display.set_caption(title)
+        if q_table is not None:
+            shape = np.shape(q_table)
+            if len(shape) != 3 or shape[2] != 4:
+                raise ValueError(
+                    f"q_table must have 3 dimentions and four elements in its deepest dimention to be plotted ")
+
+            q_table = np.flip(q_table, 1)
+            for i in range(self.board_x):
+                for j in range(self.board_y):
+                    for q_i in range(4):
+                            x_gen = i * PYGAME_SCALE
+                            y_gen = j * PYGAME_SCALE
+                            if q_i == 0:
+                                x_sub = x_gen + PYGAME_SCALE / 2 * 0.5
+                                y_sub = y_gen
+                            if q_i == 1:
+                                x_sub = x_gen + PYGAME_SCALE / 2
+                                y_sub = y_gen + PYGAME_SCALE / 2 * 0.5
+                            if q_i == 2:
+                                x_sub = x_gen + PYGAME_SCALE / 2 * 0.5
+                                y_sub = y_gen + PYGAME_SCALE / 2
+                            if q_i == 3:
+                                x_sub = x_gen
+                                y_sub = y_gen + PYGAME_SCALE / 2 * 0.55
+                            q_cell_value = q_table[i][j][q_i]
+                            cell_max = np.amax(q_table[i][j])
+                            cell_min = np.amin(q_table[i][j])
+                            red = np.interp(
+                                q_cell_value, [cell_min, cell_max], [0, 255])
+                            color = [red, 10, 10]
+                            pygame.draw.rect(win, color, (x_sub, y_sub,
+                                                          PYGAME_SCALE / 4, PYGAME_SCALE / 4))
 
         board_image = np.flip(self.board, 1)
         draw_objects = []
