@@ -76,7 +76,11 @@ class MoveToGoalQAgent(object):
                 while not done:
 
                     if show and plot_game:
-                        self.game.display_game(f"Episode {episode}")
+                        if self.game.state_space == 2:
+                            self.game.display_game(
+                                f"Episode {episode}", self.q_table)
+                        else:
+                            self.game.display_game(f"Episode {episode}")
                         time.sleep(.01)
 
                     new_board_state, reward, done = self.training_step(epsilon, learning_rate, discount)
