@@ -9,7 +9,9 @@ import numpy as np
 PYGAME_SCALE = 50
 DEFAULT_COLORS = {"player": (0, 0, 255),
                   "goal": (0, 255, 0),
-                  "enemy": (255, 0, 0)}
+                  "enemy": (255, 0, 0),
+                  "hole": (0, 0, 0),
+                  "floor": (255, 255, 255)}
 
 
 class GameObject(object):
@@ -26,6 +28,7 @@ class GameObject(object):
         :param color: The color of this object when it's rendered (RGB)
         """
         self.position = position
+        self.last_position = None
         self.name = name
         self.color = color
 
@@ -35,6 +38,7 @@ class GameObject(object):
 
         :param new_position: x and y new positions for the object in that order
         """
+        self.last_position = self.position
         self.position = new_position
 
 
@@ -45,7 +49,7 @@ class MoveToGoal(object):
     """
 
     def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int,
-                 game_end: int, state_space: int):
+                 game_end: int, state_space: int, game_name: str):
         """
         :param board_x: Board width
         :param board_y: Board height
@@ -53,6 +57,7 @@ class MoveToGoal(object):
         :param move_reward: Reward given when moving and not reaching a terminal state
         :param game_end: How many steps before the game ends
         """
+        self.game_name = game_name
         self.board_x = board_x
         self.board_y = board_y
         self.goal_reward = goal_reward
@@ -82,28 +87,30 @@ class MoveToGoal(object):
             for i in range(self.board_x):
                 for j in range(self.board_y):
                     for q_i in range(4):
-                            x_gen = i * PYGAME_SCALE
-                            y_gen = j * PYGAME_SCALE
-                            if q_i == 0:
-                                x_sub = x_gen + PYGAME_SCALE / 2 * 0.5
-                                y_sub = y_gen
-                            if q_i == 1:
-                                x_sub = x_gen + PYGAME_SCALE / 2
-                                y_sub = y_gen + PYGAME_SCALE / 2 * 0.5
-                            if q_i == 2:
-                                x_sub = x_gen + PYGAME_SCALE / 2 * 0.5
-                                y_sub = y_gen + PYGAME_SCALE / 2
-                            if q_i == 3:
-                                x_sub = x_gen
-                                y_sub = y_gen + PYGAME_SCALE / 2 * 0.55
-                            q_cell_value = q_table[i][j][q_i]
-                            cell_max = np.amax(q_table[i][j])
-                            cell_min = np.amin(q_table[i][j])
-                            red = np.interp(
-                                q_cell_value, [cell_min, cell_max], [0, 255])
-                            color = [red, 10, 10]
-                            pygame.draw.rect(win, color, (x_sub, y_sub,
-                                                          PYGAME_SCALE / 4, PYGAME_SCALE / 4))
+                        x_gen = i * PYGAME_SCALE
+                        y_gen = j * PYGAME_SCALE
+                        x_sub = x_gen
+                        y_sub = y_gen
+                        if q_i == 0:
+                            x_sub = x_gen + PYGAME_SCALE / 2 * 0.5
+                            y_sub = y_gen
+                        if q_i == 1:
+                            x_sub = x_gen + PYGAME_SCALE / 2
+                            y_sub = y_gen + PYGAME_SCALE / 2 * 0.5
+                        if q_i == 2:
+                            x_sub = x_gen + PYGAME_SCALE / 2 * 0.5
+                            y_sub = y_gen + PYGAME_SCALE / 2
+                        if q_i == 3:
+                            x_sub = x_gen
+                            y_sub = y_gen + PYGAME_SCALE / 2 * 0.55
+                        q_cell_value = q_table[i][j][q_i]
+                        cell_max = np.amax(q_table[i][j])
+                        cell_min = np.amin(q_table[i][j])
+                        red = np.interp(
+                            q_cell_value, [cell_min, cell_max], [0, 255])
+                        color = [red, 10, 10]
+                        pygame.draw.rect(win, color, (x_sub, y_sub,
+                                                      PYGAME_SCALE / 4, PYGAME_SCALE / 4))
 
         board_image = np.flip(self.board, 1)
         draw_objects = []
