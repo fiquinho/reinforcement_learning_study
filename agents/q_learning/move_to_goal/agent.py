@@ -111,7 +111,7 @@ class MoveToGoalQAgent(object):
 
         moving_avg = np.convolve(episode_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
-        self.plot_training_info(moving_avg)
+        self.plot_training_info(moving_avg, agent_folder)
 
     def training_step(self, epsilon, learning_rate, discount):
 
@@ -136,15 +136,17 @@ class MoveToGoalQAgent(object):
         return new_board_state, reward, done
 
     @staticmethod
-    def plot_training_info(moving_avg: np.array):
+    def plot_training_info(moving_avg: np.array, agent_folder: Path=None):
         plt.figure(figsize=(5, 5))
-        # Moving average plot
 
+        # Moving average plot
         plt.plot([i for i in range(len(moving_avg))], moving_avg)
         plt.ylabel(f"Reward")
         plt.xlabel("Episode #")
         plt.title("Reward moving average")
 
+        if agent_folder is not None:
+            plt.savefig(Path(agent_folder, "reward_moving_average.png"))
         plt.show()
 
     def save_agent(self, output_dir: Path):
