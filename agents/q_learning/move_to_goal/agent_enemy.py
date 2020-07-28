@@ -68,6 +68,10 @@ def main():
                         help="How many steps before the game ends.")
     parser.add_argument("--plot_game", action="store_true", default=False,
                         help="Activate to plot the agent playing the game during training.")
+    parser.add_argument("--experiments_dir", type=str, default=None,
+                        help="Pass a directory to save the model.")
+    parser.add_argument("--replace", action="store_true", default=False,
+                        help="Activate overwrite an experiment in memory.")
     args = parser.parse_args()
 
     board_size = args.board_size
@@ -82,6 +86,8 @@ def main():
     if args.show_every is None:
         args.show_every = int(args.episodes * args.cycles * 0.1)
 
+    experiments_dir = Path(args.experiments_dir) if args.experiments_dir is not None else None
+
     test_game = MoveToGoalEnemy(board_x=board_size[0],
                                 board_y=board_size[1],
                                 goal_reward=args.goal_reward,
@@ -95,7 +101,8 @@ def main():
     test_agent = MoveToGoalQAgent(game=test_game)
     test_agent.train_agent(episodes=args.episodes, epsilon=args.epsilon, plot_game=args.plot_game,
                            show_every=args.show_every, learning_rate=args.learning_rate,
-                           discount=args.discount, cycles=args.cycles)
+                           discount=args.discount, cycles=args.cycles, save_model=experiments_dir,
+                           replace=args.replace)
 
 
 if __name__ == '__main__':

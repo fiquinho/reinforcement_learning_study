@@ -21,9 +21,10 @@ class MoveToGoalEnemy(MoveToGoal):
         self.enemy_initial_pos = enemy_initial_pos
         self.enemy_movement = enemy_movement
         self.state_space = 6
+        game_name = f"mtg_enemy_{board_x}x{board_y}_ER{enemy_reward}_GR{goal_reward}_MR{move_reward}_ge{game_end}"
 
         MoveToGoal.__init__(self, board_x, board_y, goal_reward, move_reward,
-                            game_end, self.state_space)
+                            game_end, self.state_space, game_name)
 
     def update_board(self):
         board = np.zeros((self.board_x, self.board_y, 3), dtype=np.uint8)
