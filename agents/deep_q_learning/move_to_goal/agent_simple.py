@@ -14,7 +14,7 @@ from code_utils.logger_utils import prepare_stream_logger, prepare_file_logger
 from code_utils.config_utils import BaseConfig
 
 
-EXPERIMENTS_DIR = Path("C://", "rl_experiments", "deep_q_learning")
+EXPERIMENTS_DIR = Path(Path.home(), "rl_experiments", "deep_q_learning")
 DEFAULT_CONFIG = Path(SCRIPT_DIR.parent, "configurations", "simple_test.json")
 
 
