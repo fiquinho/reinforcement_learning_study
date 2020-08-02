@@ -1,3 +1,4 @@
+tensorflow
 numpy >= 1.18.1
 matplotlib
 gym

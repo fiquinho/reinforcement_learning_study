@@ -81,7 +81,7 @@ class MoveToGoal(object):
             shape = np.shape(q_table)
             if len(shape) != 3 or shape[2] != 4:
                 raise ValueError(
-                    f"q_table must have 3 dimentions and four elements in its deepest dimention to be plotted ")
+                    f"q_table must have 3 dimensions and four elements in its deepest dimension to be plotted ")
 
             q_table = np.flip(q_table, 1)
             for i in range(self.board_x):
