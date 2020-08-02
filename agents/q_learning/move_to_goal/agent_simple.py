@@ -4,8 +4,6 @@ import sys
 import os
 from pathlib import Path
 
-from matplotlib import style
-
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
 sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
@@ -27,8 +25,6 @@ GAME_END = 200
 EPSILON = 1
 LEARNING_RATE = 0.1
 DISCOUNT = 0.95
-
-style.use("ggplot")
 
 
 def main():

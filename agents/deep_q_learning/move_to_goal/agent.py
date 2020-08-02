@@ -7,7 +7,7 @@ from collections import deque
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import style
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 from tqdm import tqdm
@@ -33,7 +33,7 @@ class MoveToGoalDQNAgent(object):
         self.update_target_every = update_target_every
 
         self.board_size = self.game.get_board_size()
-        self.model = self.create_model()
+        self.model = self.create_model(summary=True)
 
         # Target network
         self.target_model = self.create_model(learning_rate)
@@ -43,14 +43,18 @@ class MoveToGoalDQNAgent(object):
         self.replay_memory = deque(maxlen=self.replay_memory_size)
         self.target_update_counter = 0
 
-    def create_model(self, learning_rate: float=0.1):
+    def create_model(self, learning_rate: float=0.1, summary: bool=False):
         model = Sequential()
         input_shape = (self.game.state_space,)
         model.add(Dense(64, activation="relu", input_shape=input_shape))
         model.add(Dense(64, activation="relu"))
 
         model.add(Dense(self.game.action_space, activation='linear'))
-        model.compile(loss="mse", optimizer=Adam(lr=learning_rate), metrics=['accuracy'])
+        model.compile(loss="mse", optimizer=Adam(lr=learning_rate))
+
+        if summary:
+            model.summary(print_fn=lambda x: logger.info(x))
+
         return model
 
     def produce_action(self, state: tuple):
@@ -140,9 +144,8 @@ class MoveToGoalDQNAgent(object):
         moving_avg = np.convolve(episode_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
         if save_model is not None:
-            logger.info(f"Saving trained model to {save_model}")
+            self.save_agent(save_model)
             self.plot_training_info(moving_avg, save_model)
-            self.model.save(Path(save_model, "model"))
 
     def training_step(self, discount):
 
@@ -204,4 +207,31 @@ class MoveToGoalDQNAgent(object):
             plt.savefig(Path(agent_folder, "reward_moving_average.png"))
 
     def save_agent(self, output_dir: Path):
-        raise NotImplementedError()
+        logger.info(f"Saving trained model to {output_dir}")
+        self.model.save(Path(output_dir, "model"))
+
+    def load_agent(self, model_dir: Path):
+        self.model = load_model(model_dir)
+
+    def play_game(self, plot_game: bool=False):
+        self.game.prepare_game()
+
+        episode_reward = 0
+        done = False
+        win = False
+        while not done:
+
+            if plot_game:
+                self.game.display_game(f"{self.game.game_name}")
+                time.sleep(.4)
+
+            board_state = self.game.get_state()
+            action = self.produce_action(board_state)
+            new_board_state, reward, done = self.game.step(player_action=action)
+
+            if done and reward == self.game.goal_reward:
+                win = True
+
+            episode_reward += reward
+
+        return win, episode_reward
