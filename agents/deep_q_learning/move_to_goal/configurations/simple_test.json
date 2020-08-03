@@ -6,7 +6,7 @@
     "cycles": 2,
     "game_end": 20,
     "epsilon": 1,
-    "learning_rate": 0.1,
+    "learning_rate": 0.001,
     "discount": 0.95,
     "show_every": 6,
     "player_initial_pos": [0, 0],
@@ -14,5 +14,6 @@
     "replay_memory_size": 50,
     "min_replay_memory_size": 20,
     "batch_size": 4,
-    "update_target_every": 2
+    "update_target_every": 2,
+    "hidden_layer_size": 10
 }

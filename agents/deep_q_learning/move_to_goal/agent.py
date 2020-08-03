@@ -22,8 +22,9 @@ style.use("ggplot")
 
 class MoveToGoalDQNAgent(object):
 
-    def __init__(self, game: MoveToGoal, learning_rate: float=0.1, replay_memory_size: int=50_000,
-                 min_replay_memory_size: int=1000, batch_size: int=64, update_target_every: int=5):
+    def __init__(self, game: MoveToGoal, learning_rate: float=0.001, replay_memory_size: int=50_000,
+                 min_replay_memory_size: int=1000, batch_size: int=64, update_target_every: int=5,
+                 hidden_layer_size: int=64):
 
         self.game = game
         self.learning_rate = learning_rate
@@ -31,23 +32,24 @@ class MoveToGoalDQNAgent(object):
         self.min_replay_memory_size = min_replay_memory_size
         self.batch_size = batch_size
         self.update_target_every = update_target_every
+        self.hidden_layer_size = hidden_layer_size
 
         self.board_size = self.game.get_board_size()
-        self.model = self.create_model(summary=True)
+        self.model = self.create_model(hidden_layer_size, summary=True)
 
         # Target network
-        self.target_model = self.create_model(learning_rate)
+        self.target_model = self.create_model(hidden_layer_size, learning_rate)
         self.target_model.set_weights(self.model.get_weights())
 
         # An array with last n steps for training
         self.replay_memory = deque(maxlen=self.replay_memory_size)
         self.target_update_counter = 0
 
-    def create_model(self, learning_rate: float=0.1, summary: bool=False):
+    def create_model(self, hidden_layer_size: int=64, learning_rate: float=0.001, summary: bool=False):
         model = Sequential()
         input_shape = (self.game.state_space,)
-        model.add(Dense(64, activation="relu", input_shape=input_shape))
-        model.add(Dense(64, activation="relu"))
+        model.add(Dense(hidden_layer_size, activation="relu", input_shape=input_shape))
+        model.add(Dense(hidden_layer_size, activation="relu"))
 
         model.add(Dense(self.game.action_space, activation='linear'))
         model.compile(loss="mse", optimizer=Adam(lr=learning_rate))

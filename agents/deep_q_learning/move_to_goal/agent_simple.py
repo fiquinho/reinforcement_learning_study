@@ -43,6 +43,7 @@ class AgentConfig(BaseConfig):
         self.min_replay_memory_size = self.config_dict["min_replay_memory_size"]
         self.batch_size = self.config_dict["batch_size"]
         self.update_target_every = self.config_dict["update_target_every"]
+        self.hidden_layer_size = self.config_dict["hidden_layer_size"]
 
 
 def main():
@@ -88,7 +89,8 @@ def main():
                                     replay_memory_size=experiment_config.replay_memory_size,
                                     min_replay_memory_size=experiment_config.min_replay_memory_size,
                                     batch_size=experiment_config.batch_size,
-                                    update_target_every=experiment_config.update_target_every)
+                                    update_target_every=experiment_config.update_target_every,
+                                    hidden_layer_size=experiment_config.hidden_layer_size)
     test_agent.train_agent(episodes=experiment_config.episodes,
                            epsilon=experiment_config.epsilon,
                            plot_game=False,
