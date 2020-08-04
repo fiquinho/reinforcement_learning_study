@@ -110,3 +110,6 @@ class MoveToGoalEnemy(MoveToGoal):
         state = self.get_state()
 
         return state, reward, done
+
+    def specific_step_results(self, **kwargs):
+        raise NotImplementedError()
