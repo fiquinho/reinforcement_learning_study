@@ -4,11 +4,13 @@ import random
 import logging
 import sys
 import os
+import json
+import shutil
 from pathlib import Path
 from collections import deque
 
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
-sys.path.append(str(SCRIPT_DIR.parent.parent))
+sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
 import gym
 import numpy as np
@@ -25,8 +27,8 @@ prepare_stream_logger(logger, logging.INFO)
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
 
-EPISODES = 400
-CYCLES = 1
+EPISODES = 500
+CYCLES = 2
 LEARNING_RATE = 0.001
 DISCOUNT = 0.95
 EPSILON = 1
@@ -35,6 +37,7 @@ MIN_REPLAY_MEMORY_SIZE = 32  # Minimum number of steps in a memory to start trai
 BATCH_SIZE = 32  # How many steps (samples) to use for training
 UPDATE_TARGET_EVERY = 1  # Terminal states (end of episodes)
 LAYER_SIZE = 30
+EXPERIMENTS_DIR = Path(Path.home(), "rl_experiments", "deep_q_learning")
 
 
 class DQNModel(Model):
@@ -251,6 +254,7 @@ class MountainCarAgent(object):
 
 def main():
     parser = argparse.ArgumentParser(description="Q Learning agent that plays the MoveToGoal hard environment.")
+    parser.add_argument("--experiment_name", type=str, required=True)
     parser.add_argument("--episodes", type=int, default=EPISODES)
     parser.add_argument("--cycles", type=int, default=CYCLES)
     parser.add_argument("--show_every", type=int, default=None, help="Defaults to 10% of the episodes.")
@@ -261,7 +265,8 @@ def main():
     parser.add_argument("--batch_size", type=int, default=BATCH_SIZE)
     parser.add_argument("--layer_size", type=int, default=LAYER_SIZE)
     parser.add_argument("--update_target_every", type=int, default=UPDATE_TARGET_EVERY)
-    parser.add_argument("--save_model", type=str, default=None)
+    parser.add_argument("--output_dir", type=str, default=EXPERIMENTS_DIR,
+                        help=f"Where to save the experiments files. Defaults to {EXPERIMENTS_DIR}")
     parser.add_argument("--plot_game", action="store_true", default=False)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--replace", default=False, action="store_true")
@@ -272,24 +277,34 @@ def main():
     if args.debug:
         tf.config.run_functions_eagerly(True)
 
-    if args.save_model is not None:
-        agent_folder = Path(args.save_model)
-        logs_file = Path(agent_folder, "experiment.log")
-        if logs_file.exists():
-            if args.replace:
-                logs_file.unlink()
-            else:
-                raise FileExistsError("The experiment already exists in the output folder. "
-                                      "Use --replace to overwrite it.")
-        prepare_file_logger(logger, logging.INFO, Path(agent_folder, "experiment.log"))
+    # Create experiment folder and handle old results
+    output_dir = Path(args.output_dir)
+    game_experiments_dir = Path(output_dir, "mountain_car")
+    game_experiments_dir.mkdir(exist_ok=True, parents=True)
+    agent_folder = Path(game_experiments_dir, args.experiment_name)
+    if agent_folder.exists():
+        if args.replace:
+            shutil.rmtree(agent_folder)
+        else:
+            raise FileExistsError(f"The experiment {agent_folder} already exists."
+                                  f"Change output folder, experiment name or use -replace "
+                                  f"to overwrite.")
+    agent_folder.mkdir()
 
+    # Save experiments configurations and start experiment log
+    args.__dict__["output_dir"] = str(output_dir)
+    with open(Path(agent_folder, "configurations.json"), "w", encoding="utf8") as cfile:
+        json.dump(args.__dict__, cfile)
+    prepare_file_logger(logger, logging.INFO, Path(agent_folder, "experiment.log"))
+
+    # Create and train the agent
     test_agent = MountainCarAgent(min_replay_memory_size=args.min_replay_memory_size,
                                   update_target_every=args.update_target_every,
                                   replay_memory_size=args.replay_memory_size,
                                   batch_size=args.batch_size,
                                   layer_size=args.layer_size)
     test_agent.train_agent(episodes=args.episodes, epsilon=args.epsilon, plot_game=args.plot_game,
-                           show_every=args.show_every, save_model=Path(args.save_model),
+                           show_every=args.show_every, save_model=agent_folder,
                            discount=args.discount, cycles=args.cycles)
 
 
