@@ -33,7 +33,7 @@ LEARNING_RATE = 0.001
 DISCOUNT = 0.95
 EPSILON = 1
 REPLAY_MEMORY_SIZE = 20_000
-MIN_REPLAY_MEMORY_SIZE = 32  # Minimum number of steps in a memory to start training
+MIN_REPLAY_MEMORY_SIZE = 32  # Minimum number of steps in memory to start training
 BATCH_SIZE = 32  # How many steps (samples) to use for training
 UPDATE_TARGET_EVERY = 1  # Terminal states (end of episodes)
 LAYER_SIZE = 30
@@ -297,6 +297,8 @@ def main():
         json.dump(args.__dict__, cfile)
     prepare_file_logger(logger, logging.INFO, Path(agent_folder, "experiment.log"))
 
+    show_every = int(args.episodes * 0.1) if args.show_every is None else args.show_every
+
     # Create and train the agent
     test_agent = MountainCarAgent(min_replay_memory_size=args.min_replay_memory_size,
                                   update_target_every=args.update_target_every,
@@ -304,7 +306,7 @@ def main():
                                   batch_size=args.batch_size,
                                   layer_size=args.layer_size)
     test_agent.train_agent(episodes=args.episodes, epsilon=args.epsilon, plot_game=args.plot_game,
-                           show_every=args.show_every, save_model=agent_folder,
+                           show_every=show_every, save_model=agent_folder,
                            discount=args.discount, cycles=args.cycles)
 
 
