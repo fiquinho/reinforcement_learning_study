@@ -1,0 +1,19 @@
+{
+    "board_size": [5, 7],
+    "goal_reward": 1,
+    "move_reward": -1,
+    "episodes": 5000,
+    "cycles": 1,
+    "game_end": 50,
+    "epsilon": 1,
+    "learning_rate": 0.001,
+    "discount": 0.95,
+    "show_every": 200,
+    "player_initial_pos": [0, 0],
+    "goal_initial_pos": [4, 6],
+    "replay_memory_size": 500,
+    "min_replay_memory_size": 32,
+    "batch_size": 32,
+    "update_target_every": 5,
+    "hidden_layer_size": 20
+}

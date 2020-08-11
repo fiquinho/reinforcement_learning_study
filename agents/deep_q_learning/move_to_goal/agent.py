@@ -12,7 +12,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 from tqdm import tqdm
 
-from environments.move_to_goal.move_to_goal import MoveToGoal
+from ..move_to_goal import MoveToGoal
 
 
 logger = logging.getLogger()
