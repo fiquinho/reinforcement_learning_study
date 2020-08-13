@@ -3,6 +3,7 @@ import random
 import logging
 import sys
 import os
+import pickle
 from pathlib import Path
 from collections import deque
 
@@ -13,6 +14,7 @@ import gym
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from mpl_toolkits.mplot3d import Axes3D
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
 
@@ -66,6 +68,7 @@ class MountainCarAgent(object):
         self.env.reset()
         self.action_space = self.env.action_space.n
         self.state_space = self.env.observation_space.shape[0]
+        self.trained_steps = 0
 
         self.model = DQNModel(layer_size=layer_size, output_size=self.action_space,
                               learning_rate=learning_rate)
@@ -97,13 +100,21 @@ class MountainCarAgent(object):
 
     def train_agent(self, episodes: int=25000, epsilon: float=1, plot_game: bool=False,
                     show_every: int=None, save_model: Path=None, discount: float=0.95,
-                    cycles: int=1):
+                    cycles: int=1, save_q_values_every: int=None):
+
+        if save_q_values_every is not None and save_model is None:
+            raise ValueError("If you want to save the q values during training you must "
+                             "specify an output folder.")
+        else:
+            q_values_dir = Path(save_model, "q_values")
+            q_values_dir.mkdir()
 
         episodes_counter = 0
         episodes_wins = []
         episodes_rewards = []
         epsilon_min = 0.01
         epsilon_decay_value = 0.01
+        self.trained_steps = 0
         if show_every is None:
             show_every = episodes
 
@@ -120,7 +131,9 @@ class MountainCarAgent(object):
 
                 if episode + (cycle * episodes) > 0:
                     if not (episode + (cycle * episodes)) % show_every:
+                        logger.info("====================================================")
                         logger.info(f"Showing episode N° {episode} of cycle {cycle}")
+                        logger.info(f"Executed training steps = {self.trained_steps}")
                         logger.info(f"Batch time = {time.time() - start_time} sec")
                         logger.info(f"Epsilon is {current_epsilon}")
                         logger.info(f"Last {show_every} episodes reward mean: "
@@ -161,6 +174,12 @@ class MountainCarAgent(object):
                         self.target_update_counter = 0
 
                     episode_reward += reward
+
+                    if save_q_values_every is not None:
+                        if not self.trained_steps % save_q_values_every:
+                            plot_points = self.q_values_plot(Path(q_values_dir, f"q_values_{self.trained_steps}.png"))
+                            with open(Path(q_values_dir, f"q_values_{self.trained_steps}.pickle"), "wb") as pfile:
+                                pickle.dump(plot_points, pfile, protocol=pickle.HIGHEST_PROTOCOL)
 
                 current_epsilon -= epsilon_decay_value
 
@@ -217,6 +236,7 @@ class MountainCarAgent(object):
 
         # Fit on all samples as one batch, log only on terminal state
         self.model.train_step(np.array(states_input), np.array(target_q_values))
+        self.trained_steps += 1
 
     def save_agent(self, output_dir: Path):
         logger.info(f"Saving trained model to {output_dir}")
@@ -256,3 +276,31 @@ class MountainCarAgent(object):
         self.env.reset()
 
         return starting_state, win
+
+    def q_values_plot(self, save_fig: Path=None, show_plot: bool=False):
+        # TODO: Make this more efficient
+        sample_states = [(np.random.uniform(-1.2, 0.6), np.random.uniform(-0.07, 0.07)) for _ in range(1000)]
+        states_predictions = self.model.predict(sample_states)
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        left_actions = {"xs": [], "ys": [], "zs": []}
+        null_actions = {"xs": [], "ys": [], "zs": []}
+        right_actions = {"xs": [], "ys": [], "zs": []}
+        plot_points = [left_actions, null_actions, right_actions]
+        for i in range(len(sample_states)):
+            action = np.argmax(states_predictions[i])
+            plot_points[action]["xs"].append(sample_states[i][0])
+            plot_points[action]["ys"].append(sample_states[i][1])
+            plot_points[action]["zs"].append(np.max(states_predictions[i][action]))
+
+        for i, (c, m) in enumerate([('r', 'o'), ('b', 'o'), ("g", "o")]):
+            ax.scatter(plot_points[i]["xs"], plot_points[i]["ys"], plot_points[i]["zs"], c=c, marker=m)
+
+        if save_fig is not None:
+            fig.savefig(save_fig)
+            plt.close(fig)
+
+        if show_plot:
+            plt.show()
+
+        return plot_points
