@@ -11,11 +11,9 @@ from agents.deep_q_learning.mountain_car.agent import MountainCarAgent
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test Deep Q Learning agent that plays the "
+    parser = argparse.ArgumentParser(description="Analyse Deep Q Learning agent that plays the "
                                                  "MountainCar environment.")
     parser.add_argument("--experiment_dir", type=str, required=True)
-    parser.add_argument("--episodes", type=int, default=200)
-    parser.add_argument("--render_games", action="store_true", default=False)
     args = parser.parse_args()
 
     experiment_dir = Path(args.experiment_dir)
@@ -32,14 +30,7 @@ def main():
 
     agent.load_model(Path(experiment_dir, "model"))
 
-    results = []
-    for i in range(args.episodes):
-        starting_state, win = agent.play_game(plot_game=args.render_games)
-        results.append(win)
-
-        print(f"Episode = {i} - Starting State = {starting_state} - Victory = {win}")
-
-    print(f"Agent performance = {sum(results) * 100 / len(results)} % of Wins")
+    agent.q_values_plot(show_plot=True)
 
 
 if __name__ == '__main__':
