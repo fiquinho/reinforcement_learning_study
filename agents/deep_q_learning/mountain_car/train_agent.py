@@ -20,17 +20,6 @@ prepare_stream_logger(logger, logging.INFO)
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
 
-EPISODES = 600
-CYCLES = 2
-LEARNING_RATE = 0.001
-DISCOUNT = 0.95
-EPSILON = 1
-REPLAY_MEMORY_SIZE = 20_000
-MIN_REPLAY_MEMORY_SIZE = 1000  # Minimum number of steps in memory to start training
-BATCH_SIZE = 32  # How many steps (samples) to use for training
-UPDATE_TARGET_EVERY = 10  # Terminal states (end of episodes)
-LAYER_SIZE = 30
-SAVE_Q_VALUES_EVERY = 10_000  # Number of training steps (aprox: 200 per episode)
 EXPERIMENTS_DIR = Path(Path.home(), "rl_experiments", "deep_q_learning")
 
 
@@ -95,20 +84,24 @@ def main():
     show_every = int(config.episodes * 0.1) if config.show_every is None else config.show_every
 
     # Create and train the agent
-    test_agent = MountainCarAgent(min_replay_memory_size=config.min_replay_memory_size,
-                                  update_target_every=config.update_target_every,
-                                  replay_memory_size=config.replay_memory_size,
-                                  batch_size=config.batch_size,
-                                  layer_size=config.hidden_layer_size,
-                                  learning_rate=config.learning_rate)
-    test_agent.train_agent(episodes=config.episodes,
-                           epsilon=config.epsilon,
-                           plot_game=config.plot_game,
-                           show_every=show_every,
-                           save_model=agent_folder,
-                           discount=config.discount,
-                           cycles=config.cycles,
-                           save_q_values_every=config.save_q_values_every)
+    agent = MountainCarAgent(min_replay_memory_size=config.min_replay_memory_size,
+                             update_target_every=config.update_target_every,
+                             replay_memory_size=config.replay_memory_size,
+                             batch_size=config.batch_size,
+                             layer_size=config.hidden_layer_size,
+                             learning_rate=config.learning_rate)
+    agent.train_agent(episodes=config.episodes,
+                      epsilon=config.epsilon,
+                      plot_game=config.plot_game,
+                      show_every=show_every,
+                      save_model=agent_folder,
+                      discount=config.discount,
+                      cycles=config.cycles,
+                      save_q_values_every=config.save_q_values_every)
+
+    results = agent.test_agent(episodes=1000)
+
+    logger.info(f"Agent performance = {sum(results) * 100 / len(results)} % of Wins")
 
 
 if __name__ == '__main__':

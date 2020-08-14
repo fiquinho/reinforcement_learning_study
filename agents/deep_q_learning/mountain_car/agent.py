@@ -32,6 +32,7 @@ class DQNModel(Model):
         self.learning_rate = learning_rate
         self.d1 = Dense(layer_size, activation='relu')
         self.d2 = Dense(layer_size, activation='relu')
+        self.d3 = Dense(layer_size, activation='relu')
         self.output_layer = Dense(output_size, activation=None)
         self.loss_object = tf.keras.losses.MeanSquaredError()
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
@@ -40,6 +41,7 @@ class DQNModel(Model):
     def call(self, inputs, training=None, mask=None):
         x = self.d1(inputs)
         x = self.d2(x)
+        x = self.d3(x)
         x = self.output_layer(x)
         return x
 
@@ -50,7 +52,6 @@ class DQNModel(Model):
 
     @tf.function
     def train_step(self, inputs, labels):
-        # logger.info("Training function")
         with tf.GradientTape() as tape:
             predictions = self(inputs)
             loss = self.loss_object(labels, predictions)
@@ -304,3 +305,11 @@ class MountainCarAgent(object):
             plt.show()
 
         return plot_points
+
+    def test_agent(self, episodes: int, plot_games: bool=False):
+        results = []
+        for i in range(episodes):
+            _, win = self.play_game(plot_game=plot_games)
+            results.append(win)
+
+        return results
