@@ -1,5 +1,6 @@
 import json
 import logging
+import shutil
 from pathlib import Path
 
 
@@ -22,3 +23,6 @@ class BaseConfig(object):
         for key, value in self.__dict__.items():
             if key not in ["config_file", "config_dict"]:
                 logger.info(f"\t{key}: {value}")
+
+    def copy_config(self, output_dir: Path):
+        shutil.copyfile(self.config_file, output_dir / self.config_file.name)
