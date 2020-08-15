@@ -25,7 +25,7 @@ def main():
                              update_target_every=config["update_target_every"],
                              replay_memory_size=config["replay_memory_size"],
                              batch_size=config["batch_size"],
-                             layer_size=config["layer_size"],
+                             layer_size=config["hidden_layer_size"],
                              learning_rate=config["learning_rate"])
 
     agent.load_model(Path(experiment_dir, "model"))

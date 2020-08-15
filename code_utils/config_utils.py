@@ -25,4 +25,4 @@ class BaseConfig(object):
                 logger.info(f"\t{key}: {value}")
 
     def copy_config(self, output_dir: Path):
-        shutil.copyfile(self.config_file, output_dir / self.config_file.name)
+        shutil.copyfile(self.config_file, output_dir / "configurations.json")
