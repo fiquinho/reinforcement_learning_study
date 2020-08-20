@@ -10,6 +10,50 @@ sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 from agents.deep_q_learning.mountain_car.agent import MountainCarAgent
 
 
+def moves_analysis(agent: MountainCarAgent):
+    x_moves = []
+    y_moves = []
+    x_min = 10
+    x_max = 0
+    y_min = 10
+    y_max = 0
+
+    wins = []
+    new_state = ()
+    for i in range(100):
+        agent.env.reset()
+        done = False
+        while not done:
+
+            state = agent.env.state
+            action = agent.produce_action(state)
+
+            new_state, reward, done, _ = agent.env.step(action)
+            x_move = abs(new_state[0] - state[0])
+            y_move = abs(new_state[1] - state[1])
+            x_moves.append(x_move)
+            y_moves.append(y_move)
+            x_min = min(x_min, x_move)
+            x_max = max(x_max, x_move)
+            y_min = min(y_min, y_move)
+            y_max = max(y_max, y_move)
+
+        wins.append(bool(new_state[0] >= agent.env.goal_position and new_state[1] >= agent.env.goal_velocity))
+
+    print(f"x_min {x_min}")
+    print(f"x_max {x_max}")
+    print(f"y_min {y_min}")
+    print(f"y_max {y_max}")
+    print(f"Wins = {sum(wins)}")
+    import matplotlib.pyplot as plt
+
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    ax1.hist(x_moves, 100)
+    ax2.hist(y_moves, 100)
+
+    plt.show()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Analyse Deep Q Learning agent that plays the "
                                                  "MountainCar environment.")
