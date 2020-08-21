@@ -88,4 +88,10 @@ REQUIRED named arguments:
   --experiment_dir EXPERIMENT_DIR
 ```
 
+This is an example plot for a trained agent
 
+![asd](https://i.ibb.co/8rv3QRQ/q-values.png)
+
+The plot shows the best q value for random states of the game.
+The different colors indicate witch action has the highest Q value 
+for that state (left = red, right = green, null = blue).
