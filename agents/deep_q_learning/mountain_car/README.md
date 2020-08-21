@@ -40,8 +40,15 @@ REQUIRED named arguments:
 ```
 
 The configurations file is used to set all the hyperparameters for the experiment.
+The values in `configurations/default.json` (used by default) worked good for me. 
+You can copy this file and try your own hyperparameters.
+With this configuration it took almost 2 hs to train on my MSI GeForce RTX 2060 SUPER.
+
 The model is saved in `--output_dir` with the given `--name`.
 All training information and the final model are saved here, so it can be easily revisited.
+
+You can [download (3 MB)](https://drive.google.com/uc?export=download&id=1Uzr_S3QVeufs27FSnWARVy9C54mLZUS1)
+the model I trained using the default configurations, and try it out yourself.  
 
 ### Testing
 
