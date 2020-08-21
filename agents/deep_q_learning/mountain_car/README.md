@@ -1,6 +1,7 @@
 # Mountain Car with Deep Q Learning
 
-![Trained agent on MountainCar-v0](https://gifyu.com/image/cfeY)
+![Trained agent on MountainCar-v0](https://s7.gifyu.com/images/trained_agent.gif)
+*Trained agent playing the game*
 
 This module can be used to train a DQN agent to play [MountainCar](https://gym.openai.com/envs/MountainCar-v0/) environment from [Gym](https://gym.openai.com/).
 
