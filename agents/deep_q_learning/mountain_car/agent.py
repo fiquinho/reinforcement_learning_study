@@ -7,9 +7,6 @@ import pickle
 from pathlib import Path
 from collections import deque
 
-SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
-sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
-
 import gym
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,9 +15,35 @@ from mpl_toolkits.mplot3d import Axes3D
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
 
+SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
+sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
+
+from code_utils.config_utils import BaseConfig
+
 
 logger = logging.getLogger()
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
+
+
+class AgentConfig(BaseConfig):
+
+    def __init__(self, name: str, config_file: Path):
+        BaseConfig.__init__(self, config_file)
+
+        self.name = name
+        self.episodes = self.config_dict["episodes"]
+        self.cycles = self.config_dict["cycles"]
+        self.show_every = self.config_dict["show_every"]
+        self.epsilon = self.config_dict["epsilon"]
+        self.learning_rate = self.config_dict["learning_rate"]
+        self.discount = self.config_dict["discount"]
+        self.replay_memory_size = self.config_dict["replay_memory_size"]
+        self.min_replay_memory_size = self.config_dict["min_replay_memory_size"]
+        self.batch_size = self.config_dict["batch_size"]
+        self.update_target_every = self.config_dict["update_target_every"]
+        self.hidden_layer_size = self.config_dict["hidden_layer_size"]
+        self.plot_game = self.config_dict["plot_game"]
+        self.save_q_values_every = self.config_dict["save_q_values_every"]
 
 
 class DQNModel(Model):

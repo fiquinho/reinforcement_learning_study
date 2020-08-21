@@ -56,8 +56,10 @@ def moves_analysis(agent: MountainCarAgent):
 
 def main():
     parser = argparse.ArgumentParser(description="Analyse Deep Q Learning agent that plays the "
-                                                 "MountainCar environment.")
-    parser.add_argument("--experiment_dir", type=str, required=True)
+                                                 "MountainCar environment.",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    required_named = parser.add_argument_group('REQUIRED named arguments')
+    required_named.add_argument("--experiment_dir", type=str, required=True)
     args = parser.parse_args()
 
     experiment_dir = Path(args.experiment_dir)

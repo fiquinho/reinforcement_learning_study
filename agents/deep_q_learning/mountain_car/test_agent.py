@@ -12,10 +12,15 @@ from agents.deep_q_learning.mountain_car.agent import MountainCarAgent
 
 def main():
     parser = argparse.ArgumentParser(description="Test Deep Q Learning agent that plays the "
-                                                 "MountainCar environment.")
-    parser.add_argument("--experiment_dir", type=str, required=True)
-    parser.add_argument("--episodes", type=int, default=200)
-    parser.add_argument("--render_games", action="store_true", default=False)
+                                                 "MountainCar environment.",
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    required_named = parser.add_argument_group('REQUIRED named arguments')
+    required_named.add_argument("--experiment_dir", type=str, required=True,
+                                help="The path to a trained agent directory.")
+    parser.add_argument("--episodes", type=int, default=200,
+                        help="The number of episodes to play during testing.")
+    parser.add_argument("--render_games", action="store_true", default=False,
+                        help="Activate to render the agent playing each episode.")
     args = parser.parse_args()
 
     experiment_dir = Path(args.experiment_dir)

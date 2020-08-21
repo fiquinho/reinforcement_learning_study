@@ -5,14 +5,13 @@ import os
 import shutil
 from pathlib import Path
 
+import tensorflow as tf
+
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
 sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
-import tensorflow as tf
-
 from code_utils.logger_utils import prepare_stream_logger, prepare_file_logger
-from code_utils.config_utils import BaseConfig
-from agents.deep_q_learning.mountain_car.agent import MountainCarAgent
+from agents.deep_q_learning.mountain_car.agent import MountainCarAgent, AgentConfig
 
 
 logger = logging.getLogger()
@@ -21,38 +20,24 @@ logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
 
 EXPERIMENTS_DIR = Path(Path.home(), "rl_experiments", "deep_q_learning")
-
-
-class AgentConfig(BaseConfig):
-
-    def __init__(self, config_file: Path):
-        BaseConfig.__init__(self, config_file)
-
-        self.experiment_name = self.config_file.stem
-        self.episodes = self.config_dict["episodes"]
-        self.cycles = self.config_dict["cycles"]
-        self.show_every = self.config_dict["show_every"]
-        self.epsilon = self.config_dict["epsilon"]
-        self.learning_rate = self.config_dict["learning_rate"]
-        self.discount = self.config_dict["discount"]
-        self.replay_memory_size = self.config_dict["replay_memory_size"]
-        self.min_replay_memory_size = self.config_dict["min_replay_memory_size"]
-        self.batch_size = self.config_dict["batch_size"]
-        self.update_target_every = self.config_dict["update_target_every"]
-        self.hidden_layer_size = self.config_dict["hidden_layer_size"]
-        self.plot_game = self.config_dict["plot_game"]
-        self.save_q_values_every = self.config_dict["save_q_values_every"]
+CONFIG_FILE = Path(SCRIPT_DIR.parent, "configurations", "default.json")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Q Learning agent that plays the MoveToGoal hard environment.",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--config_file", type=str, required=True,
-                        help="Configuration file for the experiment")
+    required_named = parser.add_argument_group('REQUIRED named arguments')
+    required_named.add_argument("--name", type=str, required=True,
+                                help="The name of this experiment. The experiments files "
+                                     "get saved under this name.")
+    parser.add_argument("--config_file", type=str, default=CONFIG_FILE,
+                        help="Configuration file for the experiment.")
     parser.add_argument("--output_dir", type=str, default=EXPERIMENTS_DIR,
                         help="Where to save the experiments files")
-    parser.add_argument("--debug", action="store_true", default=False, help=" ")
-    parser.add_argument("--replace", action="store_true", default=False, help=" ")
+    parser.add_argument("--debug", action="store_true", default=False,
+                        help="Activate to run Tensorflow in eager mode.")
+    parser.add_argument("--replace", action="store_true", default=False,
+                        help="Activate to replace old experiment in the output folder.")
     args = parser.parse_args()
 
     # On debug mode all functions are executed normally (eager mode)
@@ -60,13 +45,13 @@ def main():
         tf.config.run_functions_eagerly(True)
 
     config_file = Path(args.config_file)
-    config = AgentConfig(config_file)
+    config = AgentConfig(args.name, config_file)
 
     # Create experiment folder and handle old results
     output_dir = Path(args.output_dir)
     game_experiments_dir = Path(output_dir, "mountain_car")
     game_experiments_dir.mkdir(exist_ok=True, parents=True)
-    agent_folder = Path(game_experiments_dir, config.experiment_name)
+    agent_folder = Path(game_experiments_dir, config.name)
     if agent_folder.exists():
         if args.replace:
             shutil.rmtree(agent_folder)
