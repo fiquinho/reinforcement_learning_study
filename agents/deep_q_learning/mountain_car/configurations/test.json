@@ -11,5 +11,6 @@
     "update_target_every": 1,
     "hidden_layer_size": 10,
     "plot_game": false,
-    "save_q_values_every": 400
+    "save_q_values_every": 400,
+    "double_q_learning": true
 }

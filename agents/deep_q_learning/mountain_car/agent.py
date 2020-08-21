@@ -44,6 +44,7 @@ class AgentConfig(BaseConfig):
         self.hidden_layer_size = self.config_dict["hidden_layer_size"]
         self.plot_game = self.config_dict["plot_game"]
         self.save_q_values_every = self.config_dict["save_q_values_every"]
+        self.double_q_learning = self.config_dict["double_q_learning"]
 
 
 class DQNModel(Model):
@@ -86,7 +87,7 @@ class MountainCarAgent(object):
 
     def __init__(self, replay_memory_size: int, layer_size: int,
                  min_replay_memory_size: int, learning_rate: float,
-                 batch_size: int, update_target_every: int):
+                 batch_size: int, update_target_every: int, double_q_learning: bool):
 
         self.env = gym.make("MountainCar-v0")
         self.env.reset()
@@ -108,6 +109,7 @@ class MountainCarAgent(object):
         self.batch_size = batch_size
         self.target_update_counter = 0
         self.update_target_every = update_target_every
+        self.double_q_learning = double_q_learning
 
     def produce_action(self, state: tuple):
         q_values = self.get_q_values(state)
@@ -229,10 +231,14 @@ class MountainCarAgent(object):
         current_states = np.array([transition[0] for transition in minibatch])
         current_qs_list = self.model.predict(current_states)
 
-        # Get future states from minibatch, then query NN model for Q values
-        # When using target network, query it, otherwise main network should be queried
+        # Get future states from minibatch, then query target model for Q values
         new_current_states = np.array([transition[3] for transition in minibatch])
-        future_qs_list = self.target_model.predict(new_current_states)
+        target_future_qs_list = self.target_model.predict(new_current_states)
+
+        # When using double Q learning we also need to query de NN for Q values
+        future_qs_list = []
+        if self.double_q_learning:
+            future_qs_list = self.model.predict(new_current_states)
 
         # Fill the NN inputs
         states_input = []
@@ -241,11 +247,14 @@ class MountainCarAgent(object):
         # Now we need to enumerate our batches
         for index, (current_state, action, reward, new_current_state, done) in enumerate(minibatch):
 
-            # If not a terminal state, get new q from future states, otherwise set it to 0
-            # almost like with Q Learning, but we use just part of equation here
+            # If not a terminal state, get new q from future states, otherwise set it to reward
             if not done:
-                max_future_q = np.max(future_qs_list[index])
-                new_q = reward + discount * max_future_q
+                if self.double_q_learning:
+                    max_future_action = np.argmax(future_qs_list[index])
+                    new_q = reward + discount * target_future_qs_list[index][max_future_action]
+                else:
+                    max_future_q = np.max(target_future_qs_list[index])
+                    new_q = reward + discount * max_future_q
             else:
                 new_q = reward
 
