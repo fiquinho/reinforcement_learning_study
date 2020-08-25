@@ -75,7 +75,9 @@ def main():
                              batch_size=config.batch_size,
                              layer_size=config.hidden_layer_size,
                              learning_rate=config.learning_rate,
-                             double_q_learning=config.double_q_learning)
+                             double_q_learning=config.double_q_learning,
+                             activation=config.activation,
+                             hidden_layers_count=config.hidden_layers_count)
     agent.train_agent(episodes=config.episodes,
                       epsilon=config.epsilon,
                       plot_game=config.plot_game,

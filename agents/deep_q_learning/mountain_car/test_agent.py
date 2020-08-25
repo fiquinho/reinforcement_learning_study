@@ -34,7 +34,9 @@ def main():
                              batch_size=config["batch_size"],
                              layer_size=config["hidden_layer_size"],
                              learning_rate=config["learning_rate"],
-                             double_q_learning=config["double_q_learning"])
+                             double_q_learning=config["double_q_learning"],
+                             hidden_layers_count=config["hidden_layers_count"],
+                             activation=config["activation"])
 
     agent.load_model(Path(experiment_dir, "model"))
 

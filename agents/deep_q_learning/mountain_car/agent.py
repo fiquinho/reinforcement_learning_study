@@ -45,34 +45,44 @@ class AgentConfig(BaseConfig):
         self.plot_game = self.config_dict["plot_game"]
         self.save_q_values_every = self.config_dict["save_q_values_every"]
         self.double_q_learning = self.config_dict["double_q_learning"]
+        self.hidden_layers_count = self.config_dict["hidden_layers_count"]
+        self.activation = self.config_dict["activation"]
 
 
 class DQNModel(Model):
 
-    def __init__(self, layer_size: int, output_size: int, learning_rate: float):
+    def __init__(self, layer_size: int, output_size: int, learning_rate: float,
+                 hidden_layers_count: int, activation: str="relu"):
         super(DQNModel, self).__init__()
         self.layer_size = layer_size
         self.output_size = output_size
         self.learning_rate = learning_rate
-        self.d1 = Dense(layer_size, activation='relu')
-        self.d2 = Dense(layer_size, activation='relu')
-        self.d3 = Dense(layer_size, activation='relu')
+        self.hidden_layers_count = hidden_layers_count
+        self.activation = activation
+
+        self.input_layer = Dense(layer_size, activation=activation)
+        self.hidden_layers = []
+        for i in range(self.hidden_layers_count - 1):
+            self.hidden_layers.append(Dense(layer_size, activation=activation))
+
         self.output_layer = Dense(output_size, activation=None)
         self.loss_object = tf.keras.losses.MeanSquaredError()
         self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
-    @tf.function
-    def call(self, inputs, training=None, mask=None):
-        x = self.d1(inputs)
-        x = self.d2(x)
-        x = self.d3(x)
-        x = self.output_layer(x)
-        return x
-
     def get_config(self):
         return {"layer_size": self.layer_size,
                 "output_size": self.output_size,
-                "learning_rate": self.learning_rate}
+                "learning_rate": self.learning_rate,
+                "hidden_layers_count": self.hidden_layers_count,
+                "activation": self.activation}
+
+    @tf.function
+    def call(self, inputs, training=None, mask=None):
+        x = self.input_layer(inputs)
+        for layer in self.hidden_layers:
+            x = layer(inputs)
+        x = self.output_layer(x)
+        return x
 
     @tf.function
     def train_step(self, inputs, labels):
@@ -87,7 +97,8 @@ class MountainCarAgent(object):
 
     def __init__(self, replay_memory_size: int, layer_size: int,
                  min_replay_memory_size: int, learning_rate: float,
-                 batch_size: int, update_target_every: int, double_q_learning: bool):
+                 batch_size: int, update_target_every: int, double_q_learning: bool,
+                 hidden_layers_count: int, activation: str="relu"):
 
         self.env = gym.make("MountainCar-v0")
         self.env.reset()
@@ -96,11 +107,13 @@ class MountainCarAgent(object):
         self.trained_steps = 0
 
         self.model = DQNModel(layer_size=layer_size, output_size=self.action_space,
-                              learning_rate=learning_rate)
+                              learning_rate=learning_rate, hidden_layers_count=hidden_layers_count,
+                              activation=activation)
         self.model.build((None, self.state_space))
         self.model.summary(print_fn=lambda x: logger.info(x))
         self.target_model = DQNModel(layer_size=layer_size, output_size=self.action_space,
-                                     learning_rate=learning_rate)
+                                     learning_rate=learning_rate, hidden_layers_count=hidden_layers_count,
+                                     activation=activation)
         self.target_model.build((None, self.state_space))
         self.target_model.set_weights(self.model.get_weights())
 

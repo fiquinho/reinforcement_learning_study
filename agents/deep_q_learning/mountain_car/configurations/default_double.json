@@ -12,5 +12,7 @@
     "hidden_layer_size": 256,
     "plot_game": false,
     "save_q_values_every": 10000,
-    "double_q_learning": true
+    "double_q_learning": true,
+    "hidden_layers_count": 3,
+    "activation": "relu"
 }

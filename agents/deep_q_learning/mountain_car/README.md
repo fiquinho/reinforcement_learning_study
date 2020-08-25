@@ -1,9 +1,10 @@
 # Mountain Car with Deep Q Learning
 
 ![Trained agent on MountainCar-v0](https://s7.gifyu.com/images/trained_agent.gif)
+
 *Trained agent playing the game*
 
-This module can be used to train a DQN agent to play [MountainCar](https://gym.openai.com/envs/MountainCar-v0/) environment from [Gym](https://gym.openai.com/).
+This module can be used to train a DQN agent to play the [MountainCar](https://gym.openai.com/envs/MountainCar-v0/) environment from [Gym](https://gym.openai.com/).
 
 It also has tools to evaluate and visualize the agent performance.
 
@@ -95,7 +96,7 @@ REQUIRED named arguments:
   --experiment_dir EXPERIMENT_DIR
 ```
 
-This is an example plot for a trained agent:
+This is an example plot from a trained agent:
 
 ![q_values](https://i.ibb.co/8rv3QRQ/q-values.png)
 ![q_values_xy](https://i.ibb.co/tJfKDhz/q-values-xy.png)
