@@ -17,10 +17,11 @@ class MoveToGoalSimple(MoveToGoal):
         self.goal_initial_pos = goal_initial_pos
         self.player = None
         self.goal = None
-        game_name = f"mtg_simple_{board_x}x{board_y}_GR{goal_reward}_MR{move_reward}_ge{game_end}"
+        game_name = f"move_to_goal_simple"
+        game_configurations = f"{board_x}x{board_y}_GR{goal_reward}_MR{move_reward}_ge{game_end}"
 
         MoveToGoal.__init__(self, board_x, board_y, goal_reward, move_reward,
-                            game_end, self.state_space, game_name)
+                            game_end, self.state_space, game_name, game_configurations)
 
     def update_board(self):
         board = np.zeros((self.board_x, self.board_y, 3), dtype=np.uint8)

@@ -52,7 +52,7 @@ class MoveToGoalQAgent(object):
 
         agent_folder = None
         if save_model is not None:
-            game_experiments_dir = Path(save_model, self.game.game_name)
+            game_experiments_dir = Path(save_model, self.game.game_name, self.game.game_configs)
             game_experiments_dir.mkdir(exist_ok=True, parents=True)
             agent_folder = Path(game_experiments_dir, f"ep{episodes}_e{epsilon}_lr{learning_rate}_"
                                                       f"d{discount}_c{cycles}")

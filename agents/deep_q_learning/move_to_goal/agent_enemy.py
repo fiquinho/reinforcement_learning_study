@@ -75,7 +75,7 @@ def main():
                                 enemy_initial_pos=experiment_config.enemy_initial_pos)
 
     # Experiment folder
-    game_experiments_dir = Path(output_dir, test_game.game_name)
+    game_experiments_dir = Path(output_dir, test_game.game_name, test_game.game_configs)
     game_experiments_dir.mkdir(exist_ok=True, parents=True)
     agent_folder = Path(game_experiments_dir, f"ep{experiment_config.episodes}_e{experiment_config.epsilon}_"
                                               f"lr{experiment_config.learning_rate}_d{experiment_config.discount}_"

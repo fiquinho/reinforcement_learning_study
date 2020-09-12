@@ -1,5 +1,4 @@
 .idea/
-local_experiments/
 .ipynb_checkpoints/
 visualization/
 test_utils/

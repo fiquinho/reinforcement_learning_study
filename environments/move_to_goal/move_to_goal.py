@@ -49,7 +49,7 @@ class MoveToGoal(object):
     """
 
     def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int,
-                 game_end: int, state_space: int, game_name: str):
+                 game_end: int, state_space: int, game_name: str, game_configs: str=None):
         """
         :param board_x: Board width
         :param board_y: Board height
@@ -63,6 +63,7 @@ class MoveToGoal(object):
         self.goal_reward = goal_reward
         self.move_reward = move_reward
         self.game_end = game_end
+        self.game_configs = game_configs
         self.steps_played = 0
         self.board = None
         self.state_space = state_space

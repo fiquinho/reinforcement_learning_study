@@ -1,9 +1,7 @@
-import time
 import logging
 from copy import deepcopy
 
 import numpy as np
-import matplotlib.pyplot as plt
 from matplotlib import style
 
 from environments.move_to_goal.move_to_goal import MoveToGoal
@@ -100,7 +98,7 @@ class MoveToGoalSimplePolicyAgent(object):
                     new_state, reward, done = self.game.specific_step_results(state=(i, j), action=action)
                     action_values[action] += reward + discount_factor * policy_values[new_state]
                 # Select a better action
-                best_action = np.random.choice(np.flatnonzero(action_values == action_values.max()))
+                best_action = np.random.choice(np.flatnonzero(action_values == max(action_values)))
                 if best_action != current_action:
                     updated_policy = True
 
@@ -160,9 +158,8 @@ def main():
         updated_policy = agent.update_policy(policy_values, discount_factor=0.9)
         wins, avg_reward = agent.agent_evaluation(test_episodes)
         if wins == test_episodes:
+            print(updated_policy)
             break
-
-    pass
 
 
 if __name__ == '__main__':
