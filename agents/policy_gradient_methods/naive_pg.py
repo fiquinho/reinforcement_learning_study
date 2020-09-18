@@ -142,31 +142,26 @@ class BaseNaivePolicyGradientAgent(object):
     def train_policy(self, train_steps: int, batch_size: int, show_every: int=None,
                      save_model: Path=None):
 
-        episodes_counter = 0
-        episodes_rewards = []
-        episodes_lengths = []
+        train_steps_avg_rewards = []
         start_time = time.time()
 
         for i in range(train_steps):
             states_batch, rewards_batch, actions_batch, batch_total_rewards, batch_episode_lengths = \
                 self.collect_experience(batch_size)
-
-            episodes_counter += len(batch_total_rewards)
-            episodes_rewards += batch_total_rewards
-            episodes_lengths += batch_episode_lengths
+            mean_reward = np.mean(batch_total_rewards)
 
             if show_every is not None:
                 if i > 0 and not i % show_every:
                     logger.info("====================================================")
                     logger.info(f"Training step N° {i}")
                     logger.info(f"Batch time = {time.time() - start_time} sec")
-                    logger.info(f"Last {show_every} episodes reward mean: "
-                                f"{np.mean(episodes_rewards[-show_every:])}")
+                    logger.info(f"Last {show_every} episodes reward mean: {mean_reward}")
                     start_time = time.time()
 
             self.policy.train_step(states_batch, actions_batch, rewards_batch)
+            train_steps_avg_rewards.append(mean_reward)
 
-        moving_avg = np.convolve(episodes_rewards, np.ones((show_every,)) / show_every, mode='valid')
+        moving_avg = np.convolve(train_steps_avg_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
         if save_model is not None:
             self.save_agent(save_model)

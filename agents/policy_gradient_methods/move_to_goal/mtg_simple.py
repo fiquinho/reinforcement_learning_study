@@ -29,8 +29,8 @@ class AgentConfig(BaseConfig):
         self.name = name
 
         self.board_size = self.config_dict["board_size"]
-        self.player_pos = self.config_dict["player_pos"]
-        self.goal_pos = self.config_dict["goal_pos"]
+        self.player_pos = tuple(self.config_dict["player_pos"])
+        self.goal_pos = tuple(self.config_dict["goal_pos"])
         self.goal_reward = self.config_dict["goal_reward"]
         self.move_reward = self.config_dict["move_reward"]
         self.game_end = self.config_dict["game_end"]
