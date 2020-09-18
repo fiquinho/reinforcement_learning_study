@@ -1,10 +1,17 @@
+import logging
+import time
+from pathlib import Path
+
+import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
 
-import numpy as np
-
 from environments.gridworld_corridor import GridworldCorridor
+
+
+logger = logging.getLogger()
 
 
 class NaivePolicyGradientModel(Model):
@@ -48,7 +55,7 @@ class NaivePolicyGradientModel(Model):
     def call(self, inputs, training=None, mask=None):
         x = self.input_layer(inputs)
         for layer in self.hidden_layers:
-            x = layer(inputs)
+            x = layer(x)
         logits = self.output_logits(x)
         return logits
 
@@ -68,6 +75,12 @@ class NaivePolicyGradientModel(Model):
         logits = self(np.array([state]))
         action = tf.random.categorical(logits, 1)
         return tf.squeeze(action)
+
+    @tf.function
+    def get_policy_values(self, state):
+        logits = self(np.array([state]))
+        prediction = self.get_probabilities(logits)[0]
+        return prediction
 
 
 class BaseNaivePolicyGradientAgent(object):
@@ -122,17 +135,62 @@ class BaseNaivePolicyGradientAgent(object):
             total_rewards.append(episode_reward)
             episode_lengths.append(episode_len)
 
+        states_batch = np.array(states_batch)
+
         return states_batch, rewards_batch, actions_batch, total_rewards, episode_lengths
 
-    def train_policy(self, train_steps: int, batch_size: int):
+    def train_policy(self, train_steps: int, batch_size: int, show_every: int=None,
+                     save_model: Path=None):
+
+        episodes_counter = 0
+        episodes_rewards = []
+        episodes_lengths = []
+        start_time = time.time()
 
         for i in range(train_steps):
-            states_batch, rewards_batch, actions_batch, total_rewards, episode_lengths = \
+            states_batch, rewards_batch, actions_batch, batch_total_rewards, batch_episode_lengths = \
                 self.collect_experience(batch_size)
 
+            episodes_counter += len(batch_total_rewards)
+            episodes_rewards += batch_total_rewards
+            episodes_lengths += batch_episode_lengths
+
+            if show_every is not None:
+                if i > 0 and not i % show_every:
+                    logger.info("====================================================")
+                    logger.info(f"Training step N° {i}")
+                    logger.info(f"Batch time = {time.time() - start_time} sec")
+                    logger.info(f"Last {show_every} episodes reward mean: "
+                                f"{np.mean(episodes_rewards[-show_every:])}")
+                    start_time = time.time()
+
             self.policy.train_step(states_batch, actions_batch, rewards_batch)
-            print(f"train_step: {i} - mean_rewards: {np.mean(total_rewards)} - "
-                  f"mean_lengths: {np.mean(episode_lengths)}")
+
+        moving_avg = np.convolve(episodes_rewards, np.ones((show_every,)) / show_every, mode='valid')
+
+        if save_model is not None:
+            self.save_agent(save_model)
+            self.plot_training_info(moving_avg, save_model)
+
+    def save_agent(self, output_dir: Path):
+        logger.info(f"Saving trained policy to {output_dir}")
+        self.policy.save(Path(output_dir, "model"))
+
+    def load_model(self, model_dir: Path):
+        self.policy = tf.keras.models.load_model(model_dir)
+
+    @staticmethod
+    def plot_training_info(moving_avg: np.array, agent_folder: Path=None):
+        plt.figure(figsize=(5, 5))
+
+        # Moving average plot
+        plt.plot([i for i in range(len(moving_avg))], moving_avg)
+        plt.ylabel(f"Reward")
+        plt.xlabel("Episode #")
+        plt.title("Reward moving average")
+
+        if agent_folder is not None:
+            plt.savefig(Path(agent_folder, "reward_moving_average.png"))
 
 
 def main():
