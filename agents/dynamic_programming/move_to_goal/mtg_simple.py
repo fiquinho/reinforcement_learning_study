@@ -4,8 +4,7 @@ from copy import deepcopy
 import numpy as np
 from matplotlib import style
 
-from environments.move_to_goal.move_to_goal import MoveToGoal
-from environments.move_to_goal.mtg_simple import MoveToGoalSimple
+from environments.move_to_goal import MoveToGoal, MoveToGoalSimple
 from code_utils.logger_utils import prepare_stream_logger
 
 
