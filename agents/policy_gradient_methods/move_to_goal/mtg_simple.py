@@ -6,6 +6,12 @@ import shutil
 from pathlib import Path
 
 import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
+sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
 from environments.move_to_goal import MoveToGoalSimple
 from agents.policy_gradient_methods import BaseNaivePolicyGradientAgent
@@ -41,6 +47,7 @@ class AgentConfig(BaseConfig):
         self.hidden_layer_size = self.config_dict["hidden_layer_size"]
         self.hidden_layers_count = self.config_dict["hidden_layers_count"]
         self.activation = self.config_dict["activation"]
+        self.save_policy_every = self.config_dict["save_policy_every"]
 
 
 class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
@@ -48,13 +55,44 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
     def __init__(self, game: MoveToGoalSimple, layer_size: int, learning_rate: float,
                  hidden_layers_count: int, activation: str):
         self.game = game
-
+        self.possible_states = self.get_possible_states()
         BaseNaivePolicyGradientAgent.__init__(self,
                                               layer_size=layer_size,
                                               output_size=self.game.action_space,
                                               learning_rate=learning_rate,
                                               hidden_layers_count=hidden_layers_count,
                                               activation=activation)
+
+    def policy_values_plot(self, save_fig: Path=None, show_plot: bool=False):
+        logits = self.policy(np.array(self.possible_states))
+        states_predictions = self.policy.get_probabilities(logits)
+        action_space = self.game.action_space
+        xs = [state[0] for state in self.possible_states]
+        ys = [state[1] for state in self.possible_states]
+        fig = plt.figure()
+        ax = Axes3D(fig)
+
+        for action in range(action_space):
+            action_predictions = [prediction[action] for prediction in states_predictions]
+            ax.scatter(xs, ys, action_predictions, marker="o", label=self.game.actions[action])
+        
+        ax.legend()
+        
+        if save_fig is not None:
+            fig.savefig(save_fig)
+            plt.close(fig)
+
+        if show_plot:
+            plt.show()
+
+        return self.possible_states, states_predictions
+
+    def get_possible_states(self) -> list:
+        possible_states = []
+        for x in range(self.game.board_x):
+            for y in range(self.game.board_y):
+                possible_states.append((x, y))
+        return possible_states
 
     def reset_environment(self):
         self.game.prepare_game()
@@ -128,7 +166,7 @@ def main():
                                      hidden_layers_count=config.hidden_layers_count,
                                      activation=config.activation)
     agent.train_policy(train_steps=config.training_steps, batch_size=config.batch_size, show_every=show_every,
-                       save_model=agent_folder)
+                       save_model=agent_folder, save_policy_every=config.save_policy_every)
 
 
 if __name__ == '__main__':

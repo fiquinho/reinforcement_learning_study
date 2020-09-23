@@ -1,5 +1,6 @@
 import logging
 import time
+import pickle
 from pathlib import Path
 
 import numpy as np
@@ -7,8 +8,6 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
-
-from environments.gridworld_corridor import GridworldCorridor
 
 
 logger = logging.getLogger()
@@ -108,6 +107,19 @@ class BaseNaivePolicyGradientAgent(object):
         """
         raise NotImplementedError
 
+    def get_possible_states(self) -> list:
+        raise NotImplementedError
+
+    def policy_values_plot(self, save_fig: Path=None, show_plot: bool=False):
+        raise NotImplementedError
+
+    def get_states_index(self) -> dict:
+        state_space = self.get_possible_states()
+        states_index = {}
+        for i, state in enumerate(state_space):
+            states_index[state] = i
+        return states_index
+
     def collect_experience(self, size: int):
 
         states_batch = []
@@ -140,7 +152,14 @@ class BaseNaivePolicyGradientAgent(object):
         return states_batch, rewards_batch, actions_batch, total_rewards, episode_lengths
 
     def train_policy(self, train_steps: int, batch_size: int, show_every: int=None,
-                     save_model: Path=None):
+                     save_model: Path=None, save_policy_every: int=None):
+
+        if save_policy_every is not None and save_model is None:
+            raise ValueError("If you want to save the policy values during training you must "
+                             "specify an output folder.")
+        else:
+            policy_values_dir = Path(save_model, "policy_values")
+            policy_values_dir.mkdir()
 
         train_steps_avg_rewards = []
         start_time = time.time()
@@ -161,6 +180,13 @@ class BaseNaivePolicyGradientAgent(object):
             self.policy.train_step(states_batch, actions_batch, rewards_batch)
             train_steps_avg_rewards.append(mean_reward)
 
+            if save_policy_every is not None:
+                if not i % save_policy_every:
+                    possible_states, states_predictions = self.policy_values_plot(
+                        Path(policy_values_dir, f"policy_values_{i}.png"))
+                    with open(Path(policy_values_dir, f"policy_values_{i}.pickle"), "wb") as pfile:
+                        pickle.dump(states_predictions, pfile, protocol=pickle.HIGHEST_PROTOCOL)
+
         moving_avg = np.convolve(train_steps_avg_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
         if save_model is not None:
@@ -169,7 +195,9 @@ class BaseNaivePolicyGradientAgent(object):
 
     def save_agent(self, output_dir: Path):
         logger.info(f"Saving trained policy to {output_dir}")
+        start = time.time()
         self.policy.save(Path(output_dir, "model"))
+        logger.info(f"Saving time {time.time() - start}")
 
     def load_model(self, model_dir: Path):
         self.policy = tf.keras.models.load_model(model_dir)
@@ -189,12 +217,10 @@ class BaseNaivePolicyGradientAgent(object):
 
 
 def main():
-    env = GridworldCorridor(goal_reward=0, move_reward=-1)
-
     tf.config.run_functions_eagerly(True)
-    model = NaivePolicyGradientModel(10, env.action_space, 0.001, 2)
-    state = env.get_state()
-    action = model.produce_action(env.get_state())
+    model = NaivePolicyGradientModel(10, 2, 0.001, 2)
+    state = [0.5, 1.0]
+    action = model.produce_action(state)
     print(action)
     logits = model(np.array([state]))
     print(logits)

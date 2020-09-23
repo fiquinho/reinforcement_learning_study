@@ -1,0 +1,16 @@
+{
+    "board_size": [4, 4],
+    "player_pos": [0, 0],
+    "goal_pos": [3, 3],
+    "goal_reward": 1,
+    "move_reward": -1,
+    "game_end": 10,
+    "training_steps": 2000,
+    "show_every": 50,
+    "learning_rate": 0.01,
+    "batch_size": 200,
+    "hidden_layer_size": 10,
+    "hidden_layers_count": 2,
+    "activation": "relu",
+    "save_policy_every": 50
+}
