@@ -21,13 +21,13 @@ class MoveToGoalHoles(MoveToGoal):
         self.player = None
         self.goal = None
         self.holes = []
-        self.state_space = 2
+        state_space = 2
         game_configurations = f"GR{goal_reward}_HR{hole_reward}_MR{move_reward}_ge{game_end}"
 
         self.generate_new_game(board_file)
 
         MoveToGoal.__init__(self, len(self.initial_board), len(self.initial_board[0]), goal_reward,
-                            move_reward, game_end, self.state_space, game_name=self.board_name,
+                            move_reward, game_end, state_space, game_name=self.board_name,
                             game_configs=game_configurations)
 
     def generate_new_game(self, board_file: Path):

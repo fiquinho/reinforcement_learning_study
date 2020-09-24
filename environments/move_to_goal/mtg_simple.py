@@ -10,18 +10,16 @@ class MoveToGoalSimple(MoveToGoal):
     def __init__(self, board_x: int, board_y: int, goal_reward: int, move_reward: int, game_end: int,
                  goal_initial_pos: Tuple[int, int], player_initial_pos: Tuple[int, int]=None):
 
-        self.board_x = board_x
-        self.board_y = board_y
-        self.state_space = 2
         self.player_initial_pos = player_initial_pos
         self.goal_initial_pos = goal_initial_pos
         self.player = None
         self.goal = None
         game_name = f"move_to_goal_simple"
         game_configurations = f"{board_x}x{board_y}_GR{goal_reward}_MR{move_reward}_ge{game_end}"
+        state_space = 2
 
         MoveToGoal.__init__(self, board_x, board_y, goal_reward, move_reward,
-                            game_end, self.state_space, game_name, game_configurations)
+                            game_end, state_space, game_name, game_configurations)
 
     def update_board(self):
         board = np.zeros((self.board_x, self.board_y, 3), dtype=np.uint8)
