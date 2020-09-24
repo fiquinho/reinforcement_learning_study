@@ -51,7 +51,7 @@ class NaivePolicyGradientModel(Model):
         return log_probabilities
 
     @tf.function
-    def call(self, inputs, training=None, mask=None):
+    def call(self, inputs: np.array, training=None, mask=None):
         x = self.input_layer(inputs)
         for layer in self.hidden_layers:
             x = layer(x)
@@ -59,7 +59,7 @@ class NaivePolicyGradientModel(Model):
         return logits
 
     @tf.function
-    def train_step(self, sates, actions, rewards):
+    def train_step(self, sates: np.array, actions: np.array, rewards: np.array):
         with tf.GradientTape() as tape:
             logits = self(sates)
             action_masks = tf.one_hot(actions, self.output_size)
@@ -70,16 +70,16 @@ class NaivePolicyGradientModel(Model):
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
     @tf.function
-    def produce_action(self, state):
-        logits = self(np.array([state]))
-        action = tf.random.categorical(logits, 1)
-        return tf.squeeze(action)
+    def produce_actions(self, states: np.array):
+        logits = self(states)
+        actions = tf.random.categorical(logits, 1)
+        return actions
 
     @tf.function
-    def get_policy_values(self, state):
-        logits = self(np.array([state]))
-        prediction = self.get_probabilities(logits)[0]
-        return prediction
+    def get_policy_values(self, states: np.array):
+        logits = self(states)
+        predictions = self.get_probabilities(logits)
+        return predictions
 
 
 class BaseNaivePolicyGradientAgent(object):
@@ -135,7 +135,7 @@ class BaseNaivePolicyGradientAgent(object):
             episode_len = 0
             while not done:
                 current_state = self.get_environment_state()
-                action = self.policy.produce_action(current_state)
+                action = self.policy.produce_actions(np.array([current_state]))[0][0]
                 next_state, reward, done = self.environment_step(action)
 
                 states_batch.append(current_state)
@@ -148,6 +148,8 @@ class BaseNaivePolicyGradientAgent(object):
             episode_lengths.append(episode_len)
 
         states_batch = np.array(states_batch)
+        rewards_batch = np.array(rewards_batch, dtype=np.float32)
+        actions_batch = np.array(actions_batch)
 
         return states_batch, rewards_batch, actions_batch, total_rewards, episode_lengths
 
@@ -174,7 +176,7 @@ class BaseNaivePolicyGradientAgent(object):
                     logger.info("====================================================")
                     logger.info(f"Training step N° {i}")
                     logger.info(f"Batch time = {time.time() - start_time} sec")
-                    logger.info(f"Last {show_every} episodes reward mean: {mean_reward}")
+                    logger.info(f"Last {len(batch_total_rewards)} episodes reward mean: {mean_reward}")
                     start_time = time.time()
 
             self.policy.train_step(states_batch, actions_batch, rewards_batch)
@@ -220,7 +222,7 @@ def main():
     tf.config.run_functions_eagerly(True)
     model = NaivePolicyGradientModel(10, 2, 0.001, 2)
     state = [0.5, 1.0]
-    action = model.produce_action(state)
+    action = model.produce_action(np.array([state]))
     print(action)
     logits = model(np.array([state]))
     print(logits)

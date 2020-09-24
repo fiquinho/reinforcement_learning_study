@@ -98,7 +98,7 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
         self.game.prepare_game()
 
     def get_environment_state(self):
-        return self.game.get_state()
+        return np.array(self.game.get_state())
 
     def environment_step(self, action: int):
         next_state, reward, done = self.game.step(action)
