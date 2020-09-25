@@ -55,7 +55,6 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
     def __init__(self, game: MoveToGoalSimple, layer_size: int, learning_rate: float,
                  hidden_layers_count: int, activation: str):
         self.game = game
-        self.possible_states = self.get_possible_states()
         BaseNaivePolicyGradientAgent.__init__(self,
                                               layer_size=layer_size,
                                               output_size=self.game.action_space,
@@ -64,11 +63,13 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
                                               activation=activation)
 
     def policy_values_plot(self, save_fig: Path=None, show_plot: bool=False):
-        logits = self.policy(np.array(self.possible_states))
+        possible_states = self.get_possible_states()
+        converted_possible_states = self.get_converted_possible_states(possible_states)
+        logits = self.policy(np.array(converted_possible_states))
         states_predictions = self.policy.get_probabilities(logits)
         action_space = self.game.action_space
-        xs = [state[0] for state in self.possible_states]
-        ys = [state[1] for state in self.possible_states]
+        xs = [state[0] for state in possible_states]
+        ys = [state[1] for state in possible_states]
         fig = plt.figure()
         ax = Axes3D(fig)
 
@@ -85,7 +86,7 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
         if show_plot:
             plt.show()
 
-        return self.possible_states, states_predictions
+        return possible_states, states_predictions
 
     def get_possible_states(self) -> list:
         possible_states = []
@@ -94,15 +95,29 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
                 possible_states.append((x, y))
         return possible_states
 
+    def get_converted_possible_states(self, possible_states: list):
+        converted_possible_states = []
+        for state in possible_states:
+            converted_sate = self.convert_sate(state)
+            converted_possible_states.append(converted_sate)
+        return converted_possible_states
+
     def reset_environment(self):
         self.game.prepare_game()
 
     def get_environment_state(self):
-        return np.array(self.game.get_state())
+        converted_sate = self.convert_sate(self.game.get_state())
+        return converted_sate
 
     def environment_step(self, action: int):
         next_state, reward, done = self.game.step(action)
         return next_state, reward, done
+
+    def convert_sate(self, state):
+        converted_sate = np.zeros(self.game.board_x + self.game.board_y)
+        converted_sate[state[0]] = 1
+        converted_sate[state[1] + self.game.board_x] = 1
+        return np.array(converted_sate)
 
 
 def main():
