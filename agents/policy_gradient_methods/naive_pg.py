@@ -39,16 +39,6 @@ class NaivePolicyGradientModel(Model):
                 "learning_rate": self.learning_rate,
                 "hidden_layers_count": self.hidden_layers_count,
                 "activation": self.activation}
-    
-    @tf.function
-    def get_probabilities(self, logits):
-        probabilities = tf.nn.softmax(logits)
-        return probabilities
-
-    @tf.function
-    def get_log_probabilities(self, logits):
-        log_probabilities = tf.nn.log_softmax(logits)
-        return log_probabilities
 
     @tf.function
     def call(self, inputs: np.array, training=None, mask=None):
@@ -63,11 +53,21 @@ class NaivePolicyGradientModel(Model):
         with tf.GradientTape() as tape:
             logits = self(sates)
             action_masks = tf.one_hot(actions, self.output_size)
-            log_probabilities = tf.reduce_sum(action_masks * self.get_log_probabilities(logits))
+            log_probabilities = tf.reduce_sum(action_masks * self.get_log_probabilities(logits), axis=-1)
             loss = -tf.reduce_mean(rewards * log_probabilities)
 
         gradients = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+
+    @tf.function
+    def get_probabilities(self, logits):
+        probabilities = tf.nn.softmax(logits)
+        return probabilities
+
+    @tf.function
+    def get_log_probabilities(self, logits):
+        log_probabilities = tf.nn.log_softmax(logits)
+        return log_probabilities
 
     @tf.function
     def produce_actions(self, states: np.array):

@@ -4,7 +4,7 @@
     "goal_pos": [2, 2],
     "goal_reward": 1,
     "move_reward": -1,
-    "game_end": 50,
+    "game_end": 10,
     "training_steps": 50,
     "show_every": 5,
     "learning_rate": 0.001,
@@ -12,5 +12,5 @@
     "hidden_layer_size": 10,
     "hidden_layers_count": 3,
     "activation": "relu",
-    "save_policy_every": 5
+    "save_policy_every": 10
 }
