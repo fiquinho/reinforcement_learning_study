@@ -96,7 +96,7 @@ class BaseNaivePolicyGradientAgent(object):
     def reset_environment(self):
         raise NotImplementedError
 
-    def get_environment_state(self):
+    def get_environment_state(self) -> np.array:
         raise NotImplementedError
 
     def environment_step(self, action: int):

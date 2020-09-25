@@ -95,7 +95,7 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
                 possible_states.append((x, y))
         return possible_states
 
-    def get_converted_possible_states(self, possible_states: list):
+    def get_converted_possible_states(self, possible_states: list) -> list:
         converted_possible_states = []
         for state in possible_states:
             converted_sate = self.convert_sate(state)
@@ -105,7 +105,7 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
     def reset_environment(self):
         self.game.prepare_game()
 
-    def get_environment_state(self):
+    def get_environment_state(self) -> np.array:
         converted_sate = self.convert_sate(self.game.get_state())
         return converted_sate
 
@@ -113,7 +113,7 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
         next_state, reward, done = self.game.step(action)
         return next_state, reward, done
 
-    def convert_sate(self, state):
+    def convert_sate(self, state) -> np.array:
         converted_sate = np.zeros(self.game.board_x + self.game.board_y)
         converted_sate[state[0]] = 1
         converted_sate[state[1] + self.game.board_x] = 1
