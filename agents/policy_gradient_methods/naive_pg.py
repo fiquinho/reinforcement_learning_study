@@ -113,6 +113,12 @@ class BaseNaivePolicyGradientAgent(object):
     def policy_values_plot(self, save_fig: Path=None, show_plot: bool=False):
         raise NotImplementedError
 
+    def render_environment(self):
+        raise NotImplementedError
+
+    def win_condition(self, *args):
+        raise NotImplementedError
+
     def get_states_index(self) -> dict:
         state_space = self.get_possible_states()
         states_index = {}
@@ -211,7 +217,7 @@ class BaseNaivePolicyGradientAgent(object):
         # Moving average plot
         plt.plot([i for i in range(len(moving_avg))], moving_avg)
         plt.ylabel(f"Reward")
-        plt.xlabel("Episode #")
+        plt.xlabel("Training step #")
         plt.title("Reward moving average")
 
         if agent_folder is not None:
