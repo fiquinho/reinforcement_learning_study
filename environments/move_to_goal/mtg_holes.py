@@ -16,7 +16,6 @@ class MoveToGoalHoles(MoveToGoal):
         self.board_name = board_file.stem
         self.player_initial_pos = None
         self.goal_initial_pos = None
-        self.initial_board = None
 
         self.player = None
         self.goal = None
@@ -24,7 +23,7 @@ class MoveToGoalHoles(MoveToGoal):
         state_space = 2
         game_configurations = f"GR{goal_reward}_HR{hole_reward}_MR{move_reward}_ge{game_end}"
 
-        self.generate_new_game(board_file)
+        self.initial_board = self.generate_new_game(board_file)
 
         MoveToGoal.__init__(self, len(self.initial_board), len(self.initial_board[0]), goal_reward,
                             move_reward, game_end, state_space, game_name=self.board_name,
@@ -56,7 +55,7 @@ class MoveToGoalHoles(MoveToGoal):
 
             board.append(board_row)
 
-        self.initial_board = np.array(board, dtype=np.uint8).transpose(1, 0, 2)
+        return np.array(board, dtype=np.uint8).transpose(1, 0, 2)
 
     def update_board(self):
         self.board[self.player.last_position] = DEFAULT_COLORS["floor"]

@@ -80,7 +80,7 @@ class DQNModel(Model):
     def call(self, inputs, training=None, mask=None):
         x = self.input_layer(inputs)
         for layer in self.hidden_layers:
-            x = layer(inputs)
+            x = layer(x)
         x = self.output_layer(x)
         return x
 
@@ -97,9 +97,11 @@ class MountainCarAgent(object):
 
     def __init__(self, replay_memory_size: int, layer_size: int,
                  min_replay_memory_size: int, learning_rate: float,
-                 batch_size: int, update_target_every: int, double_q_learning: bool,
-                 hidden_layers_count: int, activation: str="relu"):
+                 batch_size: int, update_target_every: int,
+                 double_q_learning: bool=False, prioritized_replay: bool=False,
+                 hidden_layers_count: int=3, activation: str="relu"):
 
+        # TODO: Implement prioritized_replay
         self.env = gym.make("MountainCar-v0")
         self.env.reset()
         self.action_space = self.env.action_space.n
