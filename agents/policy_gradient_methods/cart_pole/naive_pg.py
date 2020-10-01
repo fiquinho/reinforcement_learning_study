@@ -13,7 +13,7 @@ import gym
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
 sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
-from agents.policy_gradient_methods import BaseNaivePolicyGradientAgent
+from agents.policy_gradient_methods import NaivePolicyGradientAgent
 from code_utils import prepare_file_logger, prepare_stream_logger, BaseConfig
 
 logger = logging.getLogger()
@@ -42,7 +42,7 @@ class AgentConfig(BaseConfig):
         self.save_policy_every = self.config_dict["save_policy_every"]
 
 
-class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
+class CartPoleNaivePolicyGradient(NaivePolicyGradientAgent):
 
     def __init__(self, layer_size: int, learning_rate: float,
                  hidden_layers_count: int, activation: str):
@@ -50,12 +50,12 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
         self.action_space = self.env.action_space.n
         self.actions = ["left", "right"]
 
-        BaseNaivePolicyGradientAgent.__init__(self,
-                                              layer_size=layer_size,
-                                              output_size=self.action_space,
-                                              learning_rate=learning_rate,
-                                              hidden_layers_count=hidden_layers_count,
-                                              activation=activation)
+        NaivePolicyGradientAgent.__init__(self,
+                                          layer_size=layer_size,
+                                          output_size=self.action_space,
+                                          learning_rate=learning_rate,
+                                          hidden_layers_count=hidden_layers_count,
+                                          activation=activation)
 
     def reset_environment(self):
         self.env.reset()
@@ -76,7 +76,8 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
     def render_environment(self):
         self.env.render()
 
-    def win_condition(self, episode_reward: int):
+    @staticmethod
+    def win_condition(episode_reward: int):
         return episode_reward >= 200
 
     def play_game(self, plot_game: bool=False, delay: float=None):
@@ -90,9 +91,10 @@ class NaivePolicyGradientAgent(BaseNaivePolicyGradientAgent):
                     time.sleep(delay)
 
             state = self.get_environment_state()
-            action = self.policy.produce_actions(np.array([state]))[0][0]
+            tf_current_state = tf.constant(np.array([state]))
+            action = self.policy.produce_actions(tf_current_state)[0][0]
 
-            new_state, reward, done = self.environment_step(action, )
+            new_state, reward, done = self.environment_step(action)
             episode_reward += 1
 
         win = self.win_condition(episode_reward)
@@ -148,10 +150,10 @@ def main():
     show_every = int(config.training_steps * 0.1) if config.show_every is None else config.show_every
 
     # Create and train the agent
-    agent = NaivePolicyGradientAgent(layer_size=config.hidden_layer_size,
-                                     learning_rate=config.learning_rate,
-                                     hidden_layers_count=config.hidden_layers_count,
-                                     activation=config.activation)
+    agent = CartPoleNaivePolicyGradient(layer_size=config.hidden_layer_size,
+                                        learning_rate=config.learning_rate,
+                                        hidden_layers_count=config.hidden_layers_count,
+                                        activation=config.activation)
     agent.train_policy(train_steps=config.training_steps, batch_size=config.batch_size, show_every=show_every,
                        save_model=agent_folder, save_policy_every=config.save_policy_every)
 

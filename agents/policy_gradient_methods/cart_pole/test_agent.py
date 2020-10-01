@@ -7,7 +7,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
 sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
-from agents.policy_gradient_methods.cart_pole.naive_pg import NaivePolicyGradientAgent
+from agents.policy_gradient_methods.cart_pole.naive_pg import CartPoleNaivePolicyGradient
 
 
 def main():
@@ -28,10 +28,10 @@ def main():
     with open(config_file, "r", encoding="utf8") as cfile:
         config = json.load(cfile)
 
-    agent = NaivePolicyGradientAgent(layer_size=config["hidden_layer_size"],
-                                     learning_rate=config["learning_rate"],
-                                     hidden_layers_count=config["hidden_layers_count"],
-                                     activation=config["activation"])
+    agent = CartPoleNaivePolicyGradient(layer_size=config["hidden_layer_size"],
+                                        learning_rate=config["learning_rate"],
+                                        hidden_layers_count=config["hidden_layers_count"],
+                                        activation=config["activation"])
 
     agent.load_model(Path(experiment_dir, "model"))
 

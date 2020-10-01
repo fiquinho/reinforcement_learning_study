@@ -1,1 +1,2 @@
-from .naive_pg import NaivePolicyGradientModel, BaseNaivePolicyGradientAgent
+from .base_pg import BasicPolicyGradientModel, BasePolicyGradientAgent
+from .pg_methods import NaivePolicyGradientAgent
