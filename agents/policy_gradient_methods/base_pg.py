@@ -135,25 +135,46 @@ class Episode(object):
         self.total_reward = np.sum(self.rewards)
 
     def __len__(self):
+        """
+        :return: The length of the episode.
+        """
         return len(self.states)
 
 
 class EpisodesBatch(object):
-
+    """
+    A collection of episodes.
+    """
     def __init__(self, max_size: int):
+        """
+        Creates an empty episodes batch.
+        :param max_size: The max number of stored steps.
+        """
         self.episodes = []
         self.max_size = max_size
         self.current_size = 0
 
     def __len__(self) -> int:
+        """
+        :return the total number of stored steps
+        """
         return self.current_size
 
     def __iter__(self):
+        """
+        Iterate over the stored episodes and yield one at the time
+        :return: An Episode object
+        """
         for episode in self.episodes:
             yield episode
 
     def add_episode(self, episode: Episode):
-        if self.current_size < self.max_size:
+        """
+        Add and episode to the batch. Update number of stored steps.
+        :param episode: An Episode object
+        :raises ValueError if the episodes batch is full (max number of steps stored)
+        """
+        if not self.is_full():
             self.episodes.append(episode)
             self.current_size += len(episode)
         else:
@@ -161,6 +182,9 @@ class EpisodesBatch(object):
                              f" current_size: {self.current_size}")
 
     def is_full(self) -> bool:
+        """
+        :return: True if the number of stored steps is more than or equal to the max batch size.
+        """
         return self.current_size >= self.max_size
 
 
@@ -277,6 +301,16 @@ class BasePolicyGradientAgent(object):
 
     def train_policy(self, train_steps: int, batch_size: int, show_every: int=None,
                      save_model: Path=None, save_policy_every: int=None):
+        """
+        Train the agent to play the current environment.
+
+        :param train_steps: The number of training steps
+        :param batch_size: The number of environment steps used on each training step
+        :param show_every: How often to show training info (in training steps)
+        :param save_model: Path to the folder where to save the trained model
+        :param save_policy_every: How often to save policy information during training
+                                  (in training steps)
+        """
 
         if save_policy_every is not None and save_model is None:
             raise ValueError("If you want to save the policy values during training you must "
@@ -322,16 +356,29 @@ class BasePolicyGradientAgent(object):
             self.plot_training_info(moving_avg, save_model)
 
     def save_agent(self, output_dir: Path):
+        """
+        Save the policy neural network to files.
+        :param output_dir: Where to save the model.
+        """
         logger.info(f"Saving trained policy to {output_dir}")
         start = time.time()
         self.policy.save(Path(output_dir, "model"))
         logger.info(f"Saving time {time.time() - start}")
 
     def load_model(self, model_dir: Path):
+        """
+        Load a trained policy from files.
+        :param model_dir: Where the trained model is stored.
+        """
         self.policy = tf.keras.models.load_model(model_dir)
 
     @staticmethod
     def plot_training_info(moving_avg: np.array, agent_folder: Path=None):
+        """
+        Plot the reward moving average during training.
+        :param moving_avg: The moving average data
+        :param agent_folder: Where to save the generated plot
+        """
         plt.figure(figsize=(5, 5))
 
         # Moving average plot
