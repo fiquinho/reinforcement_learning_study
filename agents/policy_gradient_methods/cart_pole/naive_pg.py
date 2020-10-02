@@ -48,9 +48,11 @@ class CartPoleNaivePolicyGradient(NaivePolicyGradientAgent):
                  hidden_layers_count: int, activation: str):
         self.env = gym.make("CartPole-v0")
         self.action_space = self.env.action_space.n
+        self.state_space = self.env.observation_space.shape[0]
         self.actions = ["left", "right"]
 
         NaivePolicyGradientAgent.__init__(self,
+                                          input_size=self.state_space,
                                           layer_size=layer_size,
                                           output_size=self.action_space,
                                           learning_rate=learning_rate,
@@ -91,7 +93,7 @@ class CartPoleNaivePolicyGradient(NaivePolicyGradientAgent):
                     time.sleep(delay)
 
             state = self.get_environment_state()
-            tf_current_state = tf.constant(np.array([state]))
+            tf_current_state = tf.constant(np.array([state]), dtype=tf.float32)
             action = self.policy.produce_actions(tf_current_state)[0][0]
 
             new_state, reward, done = self.environment_step(action)

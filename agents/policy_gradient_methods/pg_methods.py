@@ -14,10 +14,11 @@ from agents.policy_gradient_methods import BasePolicyGradientAgent
 
 class NaivePolicyGradientAgent(BasePolicyGradientAgent):
 
-    def __init__(self, layer_size: int, learning_rate: float,
+    def __init__(self, input_size: int, layer_size: int, learning_rate: float,
                  hidden_layers_count: int, activation: str, output_size: int):
 
         BasePolicyGradientAgent.__init__(self,
+                                         input_size=input_size,
                                          layer_size=layer_size,
                                          output_size=output_size,
                                          learning_rate=learning_rate,
