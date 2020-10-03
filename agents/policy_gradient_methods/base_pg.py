@@ -148,7 +148,7 @@ class BasePolicyGradientAgent(object):
         """
         raise NotImplementedError
 
-    def environment_step(self, action: int):
+    def environment_step(self, action: int) -> (np.array, float, bool):
         """
         Make a move in the environment with given action.
         :param action: The action index.

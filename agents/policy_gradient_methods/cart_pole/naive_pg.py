@@ -29,8 +29,13 @@ CONFIG_FILE = Path(SCRIPT_DIR.parent, "configurations", "default.json")
 class AgentConfig(BaseConfig):
 
     def __init__(self, name: str, config_file: Path):
+        """
+        Agent configurations for Naive PG on CartPOle-v0.
+        Args:
+            name: The name of the experiment
+            config_file: The configurations file (must be .json)
+        """
         BaseConfig.__init__(self, config_file)
-
         self.name = name
         self.training_steps = self.config_dict["training_steps"]
         self.show_every = self.config_dict["show_every"]
@@ -43,9 +48,20 @@ class AgentConfig(BaseConfig):
 
 
 class CartPoleNaivePolicyGradient(NaivePolicyGradientAgent):
+    """
+    Agent that learns to play the CartPole-V0 environment using Naive PG.
+    """
 
     def __init__(self, layer_size: int, learning_rate: float,
                  hidden_layers_count: int, activation: str):
+        """
+        Create a new agent (not trained).
+        Args:
+            layer_size: The number of neurons in each hidden layer
+            learning_rate: The training step size
+            hidden_layers_count: The number of hidden layer before the output layer
+            activation: The activation function for the hidden layers
+        """
         self.env = gym.make("CartPole-v0")
         self.action_space = self.env.action_space.n
         self.state_space = self.env.observation_space.shape[0]

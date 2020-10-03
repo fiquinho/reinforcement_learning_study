@@ -16,11 +16,11 @@ def feed_forward_model_constructor(input_dim, output_dim):
                      hidden_layers_count: int, activation: str="relu"):
             """
             Create a new FFNN model to represent a policy.
-
-            :param layer_size: The number of neurons on each hidden layer.
-            :param learning_rate: The training step size.
-            :param hidden_layers_count: The number of FF layers before the output layer.
-            :param activation: Activation function for hidden layer neurons.
+            Args:
+                layer_size: The number of neurons on each hidden layer.
+                learning_rate: The training step size.
+                hidden_layers_count: The number of FF layers before the output layer.
+                activation: Activation function for hidden layer neurons.
             """
 
             super(FeedForwardPolicyGradientModel, self).__init__()
@@ -87,12 +87,5 @@ def feed_forward_model_constructor(input_dim, output_dim):
             logits = self(states)
             actions = tf.random.categorical(logits, 1)
             return actions
-
-        @tf.function(input_signature=[tf.TensorSpec(shape=[None, input_dim], dtype=tf.float32)])
-        def get_policy_values(self, states: tf.Tensor):
-            print("Check retrace! get_policy_values")
-            logits = self(states)
-            predictions = self.get_probabilities(logits)
-            return predictions
 
     return FeedForwardPolicyGradientModel
