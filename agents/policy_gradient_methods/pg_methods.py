@@ -11,11 +11,11 @@ from agents.policy_gradient_methods import *
 from code_utils.config_utils import BaseConfig
 
 
-class NaiveAgentConfig(BaseConfig):
+class StandardAgentConfig(BaseConfig):
 
     def __init__(self, name: str, config_file: Path):
         """
-        Agent configurations for Naive Policy Gradient training.
+        Agent configurations for Naive and Reward to Go Policy Gradient training.
         Args:
             name: The name of the experiment/agent
             config_file: The configurations file (must be .json)
@@ -34,7 +34,7 @@ class NaiveAgentConfig(BaseConfig):
 
 class NaivePolicyGradientAgent(BasePolicyGradientAgent):
 
-    def __init__(self, env: Environment, agent_config: NaiveAgentConfig):
+    def __init__(self, env: Environment, agent_config: StandardAgentConfig):
 
         BasePolicyGradientAgent.__init__(self,
                                          env=env,
@@ -61,6 +61,46 @@ class NaivePolicyGradientAgent(BasePolicyGradientAgent):
 
         states_batch = np.concatenate(states_batch, axis=0)
         actions_batch = np.concatenate(actions_batch, axis=0)
+
+        return TrainingExperience(states_batch, weights_batch, actions_batch,
+                                  total_rewards, episode_lengths)
+
+
+class RewardToGoPolicyGradientAgent(BasePolicyGradientAgent):
+
+    def __init__(self, env: Environment, agent_config: StandardAgentConfig):
+
+        BasePolicyGradientAgent.__init__(self,
+                                         env=env,
+                                         layer_size=agent_config.hidden_layer_size,
+                                         learning_rate=agent_config.learning_rate,
+                                         hidden_layers_count=agent_config.hidden_layers_count,
+                                         activation=agent_config.activation)
+
+    def get_training_experience(self, episodes: EpisodesBatch) -> TrainingExperience:
+        """See base class."""
+
+        states_batch = []
+        weights_batch = []
+        actions_batch = []
+        total_rewards = []
+        episode_lengths = []
+
+        for episode in episodes:
+            states_batch.append(episode.states)
+            actions_batch.append(episode.actions)
+
+            episode_rewards_to_go = []
+            for i in range(len(episode.rewards)):
+                episode_rewards_to_go.append(sum(episode.rewards[i:]))
+
+            weights_batch.append(episode_rewards_to_go)
+            total_rewards.append(episode.total_reward)
+            episode_lengths.append(len(episode))
+
+        states_batch = np.concatenate(states_batch, axis=0)
+        actions_batch = np.concatenate(actions_batch, axis=0)
+        weights_batch = np.concatenate(weights_batch, axis=0)
 
         return TrainingExperience(states_batch, weights_batch, actions_batch,
                                   total_rewards, episode_lengths)

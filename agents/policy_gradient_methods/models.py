@@ -39,6 +39,7 @@ def feed_forward_model_constructor(input_dim, output_dim):
             super(FeedForwardPolicyGradientModel, self).__init__()
             self.layer_size = layer_size
             self.output_size = output_dim
+            self.input_size = input_dim
             self.learning_rate = learning_rate
             self.hidden_layers_count = hidden_layers_count
             self.activation = activation
