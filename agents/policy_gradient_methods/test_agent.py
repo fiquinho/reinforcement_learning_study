@@ -1,22 +1,24 @@
 import argparse
 import sys
 import os
-import json
 from pathlib import Path
 
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
 sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
-from agents.policy_gradient_methods.cart_pole.naive_pg import CartPoleNaivePolicyGradient
+from agents.policy_gradient_methods import ENVIRONMENTS, PG_METHODS
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test Deep Q Learning agent that plays the "
-                                                 "MountainCar environment.",
+    parser = argparse.ArgumentParser(description="Test a trained agent on it's environment.",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     required_named = parser.add_argument_group('REQUIRED named arguments')
     required_named.add_argument("--experiment_dir", type=str, required=True,
                                 help="The path to a trained agent directory.")
+    required_named.add_argument("--env", type=str, choices=ENVIRONMENTS.keys(), required=True,
+                                help="The environment to solve.")
+    required_named.add_argument("--agent", type=str, choices=PG_METHODS.keys(), required=True,
+                                help="The policy gradient method to use.")
     parser.add_argument("--episodes", type=int, default=200,
                         help="The number of episodes to play during testing.")
     parser.add_argument("--render_games", action="store_true", default=False,
@@ -25,13 +27,9 @@ def main():
 
     experiment_dir = Path(args.experiment_dir)
     config_file = Path(experiment_dir, "configurations.json")
-    with open(config_file, "r", encoding="utf8") as cfile:
-        config = json.load(cfile)
+    config = PG_METHODS[args.agent]["config"](experiment_dir.stem, config_file)
 
-    agent = CartPoleNaivePolicyGradient(layer_size=config["hidden_layer_size"],
-                                        learning_rate=config["learning_rate"],
-                                        hidden_layers_count=config["hidden_layers_count"],
-                                        activation=config["activation"])
+    agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](), agent_config=config)
 
     agent.load_model(Path(experiment_dir, "model"))
 
@@ -43,6 +41,8 @@ def main():
         print(f"Episode = {i} - Total Reward = {total_reward} - Victory = {win}")
 
     print(f"Agent performance = {sum(results) * 100 / len(results)} % of Wins")
+
+    agent.env.env.close()
 
 
 if __name__ == '__main__':

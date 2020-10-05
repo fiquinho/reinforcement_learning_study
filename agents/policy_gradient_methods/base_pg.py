@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
 sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
 
-from agents.policy_gradient_methods import feed_forward_model_constructor
+from agents.policy_gradient_methods import *
 
 
 logger = logging.getLogger()
@@ -43,71 +43,6 @@ class TrainingExperience(object):
         self.episode_lengths = np.array(episode_lengths, dtype=np.int32)
 
 
-class Episode(object):
-    """
-    A single episode of an environment
-    """
-    def __init__(self, states: list, actions: list, rewards: list):
-        assert len(states) == len(rewards) == len(actions)
-        self.states = np.array(states, dtype=np.float32)
-        self.rewards = np.array(rewards, dtype=np.float32)
-        self.actions = np.array(actions, dtype=np.int32)
-        self.total_reward = np.sum(self.rewards)
-
-    def __len__(self):
-        """
-        :return: The length of the episode.
-        """
-        return len(self.states)
-
-
-class EpisodesBatch(object):
-    """
-    A collection of episodes.
-    """
-    def __init__(self, max_size: int):
-        """
-        Creates an empty episodes batch.
-        :param max_size: The max number of stored steps.
-        """
-        self.episodes = []
-        self.max_size = max_size
-        self.current_size = 0
-
-    def __len__(self) -> int:
-        """
-        :return the total number of stored steps
-        """
-        return self.current_size
-
-    def __iter__(self):
-        """
-        Iterate over the stored episodes and yield one at the time
-        :return: An Episode object
-        """
-        for episode in self.episodes:
-            yield episode
-
-    def add_episode(self, episode: Episode):
-        """
-        Add and episode to the batch. Update number of stored steps.
-        :param episode: An Episode object
-        :raises ValueError if the episodes batch is full (max number of steps stored)
-        """
-        if not self.is_full():
-            self.episodes.append(episode)
-            self.current_size += len(episode)
-        else:
-            raise ValueError(f"The batch is full! max_size: {self.max_size} -"
-                             f" current_size: {self.current_size}")
-
-    def is_full(self) -> bool:
-        """
-        :return: True if the number of stored steps is more than or equal to the max batch size.
-        """
-        return self.current_size >= self.max_size
-
-
 class BasePolicyGradientAgent(object):
     """
     Base class for basic policy gradient algorithms.
@@ -115,65 +50,22 @@ class BasePolicyGradientAgent(object):
      - Has training logic
     """
 
-    def __init__(self, input_size: int, output_size: int, layer_size: int,
+    def __init__(self, env: Environment, layer_size: int,
                  learning_rate: float, hidden_layers_count: int, activation: str):
         """
         Create an agent that uses a FFNN model to represent its policy.
 
-        :param input_size: The input dimension (state size)
         :param layer_size: The number of neurons on each hidden layer.
-        :param output_size: The number of neurons on output layer
-                            (number of possible actions).
         :param learning_rate: The training step size.
         :param hidden_layers_count: The number of FF layers before the output layer.
         :param activation: Activation function for hidden layer neurons.
         """
-        policy_constructor = feed_forward_model_constructor(input_size, output_size)
+        self.env = env
+        policy_constructor = feed_forward_model_constructor(env.state_space_n, env.action_space_n)
         self.policy = policy_constructor(layer_size=layer_size,
                                          learning_rate=learning_rate,
                                          hidden_layers_count=hidden_layers_count,
                                          activation=activation)
-
-    def reset_environment(self):
-        """
-        Reset the environment to start a new episode.
-        """
-        raise NotImplementedError
-
-    def get_environment_state(self) -> np.array:
-        """
-        Get the current state of the environment. Must be ready to feed to
-        the neural network.
-        :return The current state (np.array)
-        """
-        raise NotImplementedError
-
-    def environment_step(self, action: int) -> (np.array, float, bool):
-        """
-        Make a move in the environment with given action.
-        :param action: The action index.
-        :return: next_environment_state (np.array), reward (float), terminated_environment (bool)
-        """
-        raise NotImplementedError
-
-    def get_possible_states(self) -> np.array:
-        """
-        Returns a list of every possible environment state, or a sample of them.
-        :return: List of states ready to be feed into de neural network (np.array)
-        """
-        raise NotImplementedError
-
-    def policy_values_plot(self, save_fig: Path=None, show_plot: bool=False):
-        """
-        TODO: Change name and usage (policy_values_info)
-        """
-        raise NotImplementedError
-
-    def render_environment(self):
-        """
-        Render the environment to see the agent playing it.
-        """
-        raise NotImplementedError
 
     def get_training_experience(self, episodes: EpisodesBatch) -> TrainingExperience:
         """
@@ -196,17 +88,17 @@ class BasePolicyGradientAgent(object):
         episodes_batch = EpisodesBatch(max_size=size)
 
         while not episodes_batch.is_full():
-            self.reset_environment()
+            self.env.reset_environment()
             done = False
             states = []
             rewards = []
             actions = []
 
             while not done:
-                current_state = self.get_environment_state()
+                current_state = self.env.get_environment_state()
                 tf_current_state = tf.constant(np.array([current_state]), dtype=tf.float32)
                 action = self.policy.produce_actions(tf_current_state)[0][0]
-                next_state, reward, done = self.environment_step(action)
+                next_state, reward, done = self.env.environment_step(action)
 
                 states.append(current_state)
                 actions.append(action)
@@ -264,7 +156,7 @@ class BasePolicyGradientAgent(object):
             if save_policy_every is not None:
                 if not i % save_policy_every:
                     # TODO: Make this better changing policy_values_plot to something more generic
-                    possible_states, states_predictions = self.policy_values_plot(
+                    possible_states, states_predictions = self.env.policy_values_plot(
                         Path(policy_values_dir, f"policy_values_{i}.png"))
                     with open(Path(policy_values_dir, f"policy_values_{i}.pickle"), "wb") as pfile:
                         pickle.dump(states_predictions, pfile, protocol=pickle.HIGHEST_PROTOCOL)
@@ -309,3 +201,32 @@ class BasePolicyGradientAgent(object):
 
         if agent_folder is not None:
             plt.savefig(Path(agent_folder, "reward_moving_average.png"))
+
+    def play_game(self, plot_game: bool=False, delay: float=None):
+        self.env.reset_environment()
+        done = False
+        states = []
+        rewards = []
+        actions = []
+        while not done:
+            if plot_game:
+                self.env.render_environment()
+                if delay is not None:
+                    time.sleep(delay)
+
+            state = self.env.get_environment_state()
+            tf_current_state = tf.constant(np.array([state]), dtype=tf.float32)
+            action = self.policy.produce_actions(tf_current_state)[0][0]
+
+            new_state, reward, done = self.env.environment_step(action)
+
+            states.append(state)
+            rewards.append(reward)
+            actions.append(action)
+
+        episode = Episode(states, actions, rewards)
+        win = self.env.win_condition(episode)
+
+        self.env.reset_environment()
+
+        return episode.total_reward, win
