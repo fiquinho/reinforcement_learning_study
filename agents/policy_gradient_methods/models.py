@@ -1,6 +1,18 @@
+"""
+Neural Network models used to represent stochastic policies.
+The models are implemented as sub-classes of tf.keras.Models.
+The training loop is custom as well as the training step.
+Using @tf.function decorators for performance optimization.
+"""
+
+import logging
+
 import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
+
+
+logger = logging.getLogger()
 
 
 def feed_forward_model_constructor(input_dim, output_dim):
@@ -15,7 +27,8 @@ def feed_forward_model_constructor(input_dim, output_dim):
         def __init__(self, layer_size: int, learning_rate: float,
                      hidden_layers_count: int, activation: str="relu"):
             """
-            Create a new FFNN model to represent a policy.
+            Creates a new FFNN model to represent a policy. Implements all needed
+            methods from tf.keras.Model.
             Args:
                 layer_size: The number of neurons on each hidden layer.
                 learning_rate: The training step size.
@@ -48,7 +61,7 @@ def feed_forward_model_constructor(input_dim, output_dim):
 
         @tf.function(input_signature=(tf.TensorSpec(shape=[None, input_dim], dtype=tf.float32), ))
         def call(self, inputs: tf.Tensor):
-            print("Check retrace! call")
+            logger.info("[Retrace] call")
             x = self.input_layer(inputs)
             for layer in self.hidden_layers:
                 x = layer(x)
@@ -59,7 +72,7 @@ def feed_forward_model_constructor(input_dim, output_dim):
                                       tf.TensorSpec(shape=[None], dtype=tf.int32),
                                       tf.TensorSpec(shape=[None], dtype=tf.float32)])
         def train_step(self, sates: tf.Tensor, actions: tf.Tensor, weights: tf.Tensor):
-            print("Check retrace! train_step")
+            logger.info("[Retrace] train_step")
             with tf.GradientTape() as tape:
                 logits = self(sates)
                 action_masks = tf.one_hot(actions, self.output_size)
@@ -71,19 +84,19 @@ def feed_forward_model_constructor(input_dim, output_dim):
 
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, output_dim], dtype=tf.float32)])
         def get_probabilities(self, logits: tf.Tensor):
-            print("Check retrace! get_probabilities")
+            logger.info("[Retrace] get_probabilities")
             probabilities = tf.nn.softmax(logits)
             return probabilities
 
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, output_dim], dtype=tf.float32)])
         def get_log_probabilities(self, logits: tf.Tensor):
-            print("Check retrace! get_log_probabilities")
+            logger.info("[Retrace] get_log_probabilities")
             log_probabilities = tf.nn.log_softmax(logits)
             return log_probabilities
 
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, input_dim], dtype=tf.float32)])
         def produce_actions(self, states: tf.Tensor):
-            print("Check retrace! produce_actions")
+            logger.info("[Retrace] produce_actions")
             logits = self(states)
             actions = tf.random.categorical(logits, 1)
             return actions
