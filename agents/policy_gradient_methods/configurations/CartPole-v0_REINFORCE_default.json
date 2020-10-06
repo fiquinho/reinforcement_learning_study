@@ -1,0 +1,11 @@
+{
+    "discount_factor": 0.99,
+    "training_steps": 500,
+    "show_every": 10,
+    "learning_rate": 0.001,
+    "batch_size": 2000,
+    "hidden_layer_size": 40,
+    "hidden_layers_count": 4,
+    "activation": "relu",
+    "save_policy_every": null
+}

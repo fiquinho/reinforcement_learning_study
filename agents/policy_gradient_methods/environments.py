@@ -216,3 +216,41 @@ class AcrobotEnvironment(Environment):
     @staticmethod
     def win_condition(episode: Episode):
         return episode.total_reward >= 200
+
+
+class HeuristicMountainCarEnvironment(Environment):
+
+    def __init__(self):
+        env = gym.make("MountainCar-v0")
+        action_space = env.action_space.n
+        state_space = env.observation_space.shape[0]
+        actions = ["left", "null", "right"]
+
+        Environment.__init__(self, env, action_space, state_space, actions)
+
+    def reset_environment(self):
+        self.env.reset()
+
+    def get_environment_state(self) -> np.array:
+        return self.env.state
+
+    def environment_step(self, action: int) -> (np.array, float, bool):
+        next_state, reward, done, _ = self.env.step(int(action))
+        if done:
+            reward += next_state[0] * 100
+            if next_state[0] >= 0.5:
+                reward += 100
+        return next_state, reward, done
+
+    def get_possible_states(self) -> np.array:
+        return None
+
+    def policy_values_plot(self, save_fig: Path = None, show_plot: bool = False):
+        return None, None
+
+    def render_environment(self):
+        self.env.render()
+
+    @staticmethod
+    def win_condition(episode: Episode):
+        return episode.states[-1][0] >= 0.5
