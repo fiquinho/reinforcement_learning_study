@@ -126,6 +126,10 @@ class MoveToGoal(object):
 
         pygame.display.update()
 
+    @staticmethod
+    def close():
+        pygame.quit()
+
     def update_board(self):
         raise NotImplementedError()
 

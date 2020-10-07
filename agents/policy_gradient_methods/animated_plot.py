@@ -51,7 +51,7 @@ bars = ax1.bar(actions_idx, start_probabilities, tick_label=actions)
 
 actions_lines = [ax2.plot([], [], "o", markersize=3, label=action) for action in actions]
 ax2.legend()
-state_lines = [ax3.plot([], [], label=state_name) for state_name in agent.env.state_names]
+state_lines = [ax3.plot([], [], "o", markersize=2, label=state_name) for state_name in agent.env.state_names]
 ax3.legend()
 
 MAX_FRAMES = 201

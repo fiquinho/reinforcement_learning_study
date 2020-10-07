@@ -1,6 +1,6 @@
 from .models import feed_forward_model_constructor
-from .environments import EpisodesBatch, Episode, Environment, CartPoleEnvironment, \
-    AcrobotEnvironment, HeuristicMountainCarEnvironment
+from agents.policy_gradient_methods.envs import EpisodesBatch, Episode, Environment, CartPoleEnvironment, \
+    AcrobotEnvironment, HeuristicMountainCarEnvironment, MoveToGoalSimpleSmallEnvironment
 from .base_pg import BasePolicyGradientAgent, TrainingExperience
 from .pg_methods import NaivePolicyGradientAgent, RewardToGoPolicyGradientAgent, \
     BaseAgentConfig, REINFORCEPolicyGradientAgent, REINFORCEAgentConfig
@@ -8,7 +8,8 @@ from .pg_methods import NaivePolicyGradientAgent, RewardToGoPolicyGradientAgent,
 
 ENVIRONMENTS = {"CartPole-v0": CartPoleEnvironment,
                 "Acrobot-v1": AcrobotEnvironment,
-                "HeuristicMountainCar-v0": HeuristicMountainCarEnvironment}
+                "HeuristicMountainCar-v0": HeuristicMountainCarEnvironment,
+                "MoveToGoalSimpleSmall": MoveToGoalSimpleSmallEnvironment}
 
 PG_METHODS = {"naive": {"agent": NaivePolicyGradientAgent,
                         "config": BaseAgentConfig},
