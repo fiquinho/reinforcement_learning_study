@@ -88,7 +88,7 @@ class Environment(object):
     policy gradient algorithm. All methods need to be implemented.
     """
     def __init__(self, env, action_space_n: int, state_space_n: int,
-                 actions: List[str]):
+                 actions: List[str], state_names: List[str]=None):
         """Create a new Environment object.
 
         Args:
@@ -96,11 +96,13 @@ class Environment(object):
             action_space_n: The number of possible actions
             state_space_n: The length of the state vector representation
             actions: A list with the actions names
+            state_names: A list with the state attributes names
         """
         self.env = env
         self.action_space_n = action_space_n
         self.state_space_n = state_space_n
         self.actions = actions
+        self.state_names = state_names
 
     def reset_environment(self):
         """Reset the environment to start a new episode."""
@@ -156,8 +158,9 @@ class CartPoleEnvironment(Environment):
         action_space = env.action_space.n
         state_space = env.observation_space.shape[0]
         actions = ["left", "right"]
+        state_names = ["Cart Position", "Cart Velocity", "Pole Angle", "Pole Angular Velocity"]
 
-        Environment.__init__(self, env, action_space, state_space, actions)
+        Environment.__init__(self, env, action_space, state_space, actions, state_names)
 
     def reset_environment(self):
         self.env.reset()
@@ -190,8 +193,10 @@ class AcrobotEnvironment(Environment):
         action_space = env.action_space.n
         state_space = env.observation_space.shape[0]
         actions = ["left", "null", "right"]
+        state_names = ["cos(theta1)", "sin(theta1)", "cos(theta2)",
+                       "sin(theta2)", "thetaDot1", "thetaDot2"]
 
-        Environment.__init__(self, env, action_space, state_space, actions)
+        Environment.__init__(self, env, action_space, state_space, actions, state_names)
 
     def reset_environment(self):
         self.env.reset()
@@ -225,8 +230,9 @@ class HeuristicMountainCarEnvironment(Environment):
         action_space = env.action_space.n
         state_space = env.observation_space.shape[0]
         actions = ["left", "null", "right"]
+        state_names = ["position", "velocity"]
 
-        Environment.__init__(self, env, action_space, state_space, actions)
+        Environment.__init__(self, env, action_space, state_space, actions, state_names)
 
     def reset_environment(self):
         self.env.reset()
