@@ -51,6 +51,32 @@ class MoveToGoalSimpleSmallEnvironment(Environment):
     def policy_values_plot(self, save_fig: Path = None, show_plot: bool = False):
         return None, None
 
+    # def policy_values_plot(self, save_fig: Path = None, show_plot: bool = False):
+    #     possible_states = self.get_possible_states()
+    #     converted_possible_states = self.get_converted_possible_states(possible_states)
+    #     logits = self.policy(np.array(converted_possible_states))
+    #     states_predictions = self.policy.get_probabilities(logits)
+    #     action_space = self.game.action_space
+    #     xs = [state[0] for state in possible_states]
+    #     ys = [state[1] for state in possible_states]
+    #     fig = plt.figure()
+    #     ax = Axes3D(fig)
+    #
+    #     for action in range(action_space):
+    #         action_predictions = [prediction[action] for prediction in states_predictions]
+    #         ax.scatter(xs, ys, action_predictions, marker="o", label=self.game.actions[action])
+    #
+    #     ax.legend()
+    #
+    #     if save_fig is not None:
+    #         fig.savefig(save_fig)
+    #         plt.close(fig)
+    #
+    #     if show_plot:
+    #         plt.show()
+    #
+    #     return possible_states, states_predictions
+
     def convert_sate(self, state) -> np.array:
         converted_sate = np.zeros(self.env.board_x + self.env.board_y)
         converted_sate[state[0]] = 1
