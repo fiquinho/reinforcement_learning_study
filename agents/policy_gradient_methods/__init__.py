@@ -1,6 +1,5 @@
 from .models import feed_forward_model_constructor
-from agents.policy_gradient_methods.envs import EpisodesBatch, Episode, Environment, CartPoleEnvironment, \
-    AcrobotEnvironment, HeuristicMountainCarEnvironment, MoveToGoalSimpleSmallEnvironment
+from agents.policy_gradient_methods.envs import *
 from .base_pg import BasePolicyGradientAgent, TrainingExperience
 from .pg_methods import NaivePolicyGradientAgent, RewardToGoPolicyGradientAgent, \
     BaseAgentConfig, REINFORCEPolicyGradientAgent, REINFORCEAgentConfig

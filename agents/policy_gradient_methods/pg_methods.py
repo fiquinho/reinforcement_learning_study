@@ -14,8 +14,8 @@ from code_utils.config_utils import BaseConfig
 class BaseAgentConfig(BaseConfig):
 
     def __init__(self, name: str, config_file: Path):
-        """
-        Agent configurations for Naive and Reward to Go Policy Gradient training.
+        """Agent configurations for Naive and Reward to Go Policy Gradient training.
+
         Args:
             name: The name of the experiment/agent
             config_file: The configurations file (must be .json)
@@ -25,7 +25,8 @@ class BaseAgentConfig(BaseConfig):
         self.training_steps = self.config_dict["training_steps"]
         self.show_every = self.config_dict["show_every"]
         self.learning_rate = self.config_dict["learning_rate"]
-        self.batch_size = self.config_dict["batch_size"]
+        self.experience_size = self.config_dict["experience_size"]
+        self.minibatch_size = self.config_dict["minibatch_size"]
         self.hidden_layer_size = self.config_dict["hidden_layer_size"]
         self.hidden_layers_count = self.config_dict["hidden_layers_count"]
         self.activation = self.config_dict["activation"]
@@ -35,8 +36,8 @@ class BaseAgentConfig(BaseConfig):
 class REINFORCEAgentConfig(BaseAgentConfig):
 
     def __init__(self, name: str, config_file: Path):
-        """
-        Agent configurations for REINFORCE Policy Gradient training.
+        """Agent configurations for REINFORCE Policy Gradient training.
+
         Args:
             name: The name of the experiment/agent
             config_file: The configurations file (must be .json)
@@ -46,9 +47,17 @@ class REINFORCEAgentConfig(BaseAgentConfig):
 
 
 class NaivePolicyGradientAgent(BasePolicyGradientAgent):
+    """Agent that implements naive policy gradient to train the policy.
+
+    Naive -> The gradient of the log probability of the actions is weighted by
+    the total reward of the episode.
+
+    Found here as Basic Policy Gradient:
+        https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html
+    """
 
     def __init__(self, env: Environment, agent_config: BaseAgentConfig):
-
+        """See base class."""
         BasePolicyGradientAgent.__init__(self,
                                          env=env,
                                          layer_size=agent_config.hidden_layer_size,

@@ -19,19 +19,19 @@ logger = logging.getLogger()
 
 
 class TrainingExperience(object):
-    """
-    A batch of collected experience to do a training step in the network
-    """
+    """A batch of collected experience to do a training step in the network"""
+
     def __init__(self, states: list, weights: list, actions: list,
                  total_rewards: list, episode_lengths: list):
-        """
-        Create instance of collected experiences to be feed to the network
-        :param states: The list of states
-        :param weights: The weight used by the current algorithm to approximate
-                        the network gradients (ie. total reward, reward to go, etc.)
-        :param actions: The list of actions
-        :param total_rewards: The total reward obtained in each episode of the collected experience.
-        :param episode_lengths: The length of each episode of the collected experience.
+        """Create instance of collected experiences to be feed to the network.
+
+        Args:
+            states: The list of states
+            weights: The weight used by the current algorithm to approximate
+                the network gradients (ie. total reward, reward to go, etc.)
+            actions: The list of actions
+            total_rewards: The total reward obtained in each episode of the collected experience.
+            episode_lengths: The length of each episode of the collected experience.
         """
         assert len(states) == len(weights) == len(actions)
         assert len(total_rewards) == len(episode_lengths)
@@ -41,6 +41,13 @@ class TrainingExperience(object):
         self.actions = np.array(actions, dtype=np.int32)
         self.total_rewards = np.array(total_rewards, dtype=np.float32)
         self.episode_lengths = np.array(episode_lengths, dtype=np.int32)
+
+    def __len__(self):
+        """
+        Returns:
+            The total number of stored environment steps
+        """
+        return len(self.states)
 
 
 class BasePolicyGradientAgent(object):
@@ -52,13 +59,14 @@ class BasePolicyGradientAgent(object):
 
     def __init__(self, env: Environment, layer_size: int,
                  learning_rate: float, hidden_layers_count: int, activation: str):
-        """
-        Create an agent that uses a FFNN model to represent its policy.
+        """Create an agent that uses a FFNN model to represent its policy.
 
-        :param layer_size: The number of neurons on each hidden layer.
-        :param learning_rate: The training step size.
-        :param hidden_layers_count: The number of FF layers before the output layer.
-        :param activation: Activation function for hidden layer neurons.
+        Args:
+            env: The environment the agent is trying to solve
+            layer_size: The number of neurons on each hidden layer
+            learning_rate: The training step size
+            hidden_layers_count: The number of FF layers before the output layer
+            activation: Activation function for hidden layer neurons
         """
         self.env = env
         policy_constructor = feed_forward_model_constructor(env.state_space_n, env.action_space_n)
@@ -111,17 +119,21 @@ class BasePolicyGradientAgent(object):
 
         return training_experience
 
-    def train_policy(self, train_steps: int, batch_size: int, show_every: int=None,
-                     save_model: Path=None, save_policy_every: int=None):
-        """
-        Train the agent to play the current environment.
+    def train_policy(self, train_steps: int, experience_size: int, show_every: int=None,
+                     save_model: Path=None, save_policy_every: int=None,
+                     minibatch_size: int=None):
+        """Train the agent to solve the current environment.
 
-        :param train_steps: The number of training steps
-        :param batch_size: The number of environment steps used on each training step
-        :param show_every: How often to show training info (in training steps)
-        :param save_model: Path to the folder where to save the trained model
-        :param save_policy_every: How often to save policy information during training
-                                  (in training steps)
+        Args:
+            train_steps: The number of training steps
+            experience_size: The number of environment steps used on each training step
+            show_every: How often to show training info (in training steps)
+            save_model: Path to the folder where to save the trained model
+            save_policy_every: How often to save policy information during training
+                               (in training steps)
+            minibatch_size: How many environment steps are pass to the NN at once.
+                            If None, the total number of steps collected for each
+                            training step is used (experience_size)
         """
 
         if save_policy_every is not None and save_model is None:
@@ -135,7 +147,7 @@ class BasePolicyGradientAgent(object):
         start_time = time.time()
 
         for i in range(train_steps):
-            training_experience = self.collect_experience(batch_size)
+            training_experience = self.collect_experience(experience_size)
             mean_reward = np.mean(training_experience.total_rewards)
 
             if show_every is not None:
@@ -150,7 +162,12 @@ class BasePolicyGradientAgent(object):
             actions_batch = tf.constant(training_experience.actions, dtype=np.int32)
             weights_batch = tf.constant(training_experience.weights, dtype=np.float32)
 
-            self.policy.train_step(states_batch, actions_batch, weights_batch)
+            batch_size = minibatch_size if minibatch_size is not None else len(states_batch)
+            data = tf.data.Dataset.from_tensor_slices((states_batch, actions_batch, weights_batch))
+            data = data.shuffle(buffer_size=len(states_batch)).batch(batch_size)
+
+            for data_batch in data:
+                self.policy.train_step(data_batch[0], data_batch[1], data_batch[2])
             train_steps_avg_rewards.append(mean_reward)
 
             if save_policy_every is not None:

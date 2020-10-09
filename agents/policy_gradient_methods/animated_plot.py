@@ -9,7 +9,7 @@ import numpy as np
 
 
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
-sys.path.append(str(SCRIPT_DIR.parent.parent.parent.parent))
+sys.path.append(str(SCRIPT_DIR.parent.parent.parent))
 
 from agents.policy_gradient_methods import ENVIRONMENTS, PG_METHODS
 

@@ -61,7 +61,6 @@ def main():
     # Create experiment folder and handle old results
     output_dir = Path(args.output_dir)
     agent_folder = Path(output_dir, args.env, args.agent, config.name)
-    agent_folder.mkdir(exist_ok=True, parents=True)
     if agent_folder.exists():
         if args.replace:
             shutil.rmtree(agent_folder)
@@ -83,8 +82,9 @@ def main():
 
     # Create and train the agent
     agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](), agent_config=config)
-    agent.train_policy(train_steps=config.training_steps, batch_size=config.batch_size, show_every=show_every,
-                       save_model=agent_folder, save_policy_every=config.save_policy_every)
+    agent.train_policy(train_steps=config.training_steps, experience_size=config.experience_size,
+                       show_every=show_every, save_model=agent_folder,
+                       save_policy_every=config.save_policy_every, minibatch_size=config.minibatch_size)
 
 
 if __name__ == '__main__':
