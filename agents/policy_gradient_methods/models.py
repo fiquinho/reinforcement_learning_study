@@ -6,6 +6,7 @@ Using @tf.function decorators for performance optimization.
 """
 
 import logging
+from pathlib import Path
 
 import tensorflow as tf
 from tensorflow.keras import Model
@@ -24,7 +25,7 @@ def feed_forward_model_constructor(input_dim, output_dim):
         The output shape should be the number of possible actions.
         """
 
-        def __init__(self, layer_size: int, learning_rate: float,
+        def __init__(self, model_path: Path, layer_size: int, learning_rate: float,
                      hidden_layers_count: int, activation: str="relu"):
             """
             Creates a new FFNN model to represent a policy. Implements all needed
@@ -37,6 +38,7 @@ def feed_forward_model_constructor(input_dim, output_dim):
             """
 
             super(FeedForwardPolicyGradientModel, self).__init__()
+            self.model_path = model_path
             self.layer_size = layer_size
             self.output_size = output_dim
             self.input_size = input_dim
@@ -53,9 +55,11 @@ def feed_forward_model_constructor(input_dim, output_dim):
 
             self.optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
+            self.train_log_dir = Path(model_path, "train_log")
+            self.summary_writer = tf.summary.create_file_writer(str(self.train_log_dir))
+
         def get_config(self):
             return {"layer_size": self.layer_size,
-                    "output_size": self.output_size,
                     "learning_rate": self.learning_rate,
                     "hidden_layers_count": self.hidden_layers_count,
                     "activation": self.activation}
@@ -82,6 +86,8 @@ def feed_forward_model_constructor(input_dim, output_dim):
 
             gradients = tape.gradient(loss, self.trainable_variables)
             self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+
+            return logits, loss, log_probabilities
 
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, output_dim], dtype=tf.float32)])
         def get_probabilities(self, logits: tf.Tensor):

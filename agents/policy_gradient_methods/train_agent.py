@@ -81,10 +81,10 @@ def main():
     show_every = int(config.training_steps * 0.1) if config.show_every is None else config.show_every
 
     # Create and train the agent
-    agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](), agent_config=config)
+    agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](), agent_path=agent_folder, agent_config=config)
     agent.train_policy(train_steps=config.training_steps, experience_size=config.experience_size,
-                       show_every=show_every, save_model=agent_folder,
-                       save_policy_every=config.save_policy_every, minibatch_size=config.minibatch_size)
+                       show_every=show_every, save_policy_every=config.save_policy_every,
+                       minibatch_size=config.minibatch_size)
 
 
 if __name__ == '__main__':

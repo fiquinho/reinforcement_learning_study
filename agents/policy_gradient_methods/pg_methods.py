@@ -56,10 +56,11 @@ class NaivePolicyGradientAgent(BasePolicyGradientAgent):
         https://spinningup.openai.com/en/latest/spinningup/rl_intro3.html
     """
 
-    def __init__(self, env: Environment, agent_config: BaseAgentConfig):
+    def __init__(self, env: Environment, agent_path: Path, agent_config: BaseAgentConfig):
         """See base class."""
         BasePolicyGradientAgent.__init__(self,
                                          env=env,
+                                         agent_path=agent_path,
                                          layer_size=agent_config.hidden_layer_size,
                                          learning_rate=agent_config.learning_rate,
                                          hidden_layers_count=agent_config.hidden_layers_count,
@@ -90,10 +91,11 @@ class NaivePolicyGradientAgent(BasePolicyGradientAgent):
 
 class RewardToGoPolicyGradientAgent(BasePolicyGradientAgent):
 
-    def __init__(self, env: Environment, agent_config: BaseAgentConfig):
+    def __init__(self, env: Environment, agent_path: Path, agent_config: BaseAgentConfig):
 
         BasePolicyGradientAgent.__init__(self,
                                          env=env,
+                                         agent_path=agent_path,
                                          layer_size=agent_config.hidden_layer_size,
                                          learning_rate=agent_config.learning_rate,
                                          hidden_layers_count=agent_config.hidden_layers_count,
@@ -130,11 +132,12 @@ class RewardToGoPolicyGradientAgent(BasePolicyGradientAgent):
 
 class REINFORCEPolicyGradientAgent(BasePolicyGradientAgent):
 
-    def __init__(self, env: Environment, agent_config: REINFORCEAgentConfig):
+    def __init__(self, env: Environment, agent_path: Path, agent_config: REINFORCEAgentConfig):
 
         self.discount_factor = agent_config.discount_factor
         BasePolicyGradientAgent.__init__(self,
                                          env=env,
+                                         agent_path=agent_path,
                                          layer_size=agent_config.hidden_layer_size,
                                          learning_rate=agent_config.learning_rate,
                                          hidden_layers_count=agent_config.hidden_layers_count,

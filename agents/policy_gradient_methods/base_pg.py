@@ -57,7 +57,7 @@ class BasePolicyGradientAgent(object):
      - Has training logic
     """
 
-    def __init__(self, env: Environment, layer_size: int,
+    def __init__(self, env: Environment, agent_path: Path, layer_size: int,
                  learning_rate: float, hidden_layers_count: int, activation: str):
         """Create an agent that uses a FFNN model to represent its policy.
 
@@ -69,8 +69,11 @@ class BasePolicyGradientAgent(object):
             activation: Activation function for hidden layer neurons
         """
         self.env = env
+        self.agent_path = agent_path
+        model_path = Path(agent_path, "model")
         policy_constructor = feed_forward_model_constructor(env.state_space_n, env.action_space_n)
-        self.policy = policy_constructor(layer_size=layer_size,
+        self.policy = policy_constructor(model_path=model_path,
+                                         layer_size=layer_size,
                                          learning_rate=learning_rate,
                                          hidden_layers_count=hidden_layers_count,
                                          activation=activation)
@@ -119,8 +122,8 @@ class BasePolicyGradientAgent(object):
 
         return training_experience
 
-    def train_policy(self, train_steps: int, experience_size: int, show_every: int=None,
-                     save_model: Path=None, save_policy_every: int=None,
+    def train_policy(self, train_steps: int, experience_size: int,
+                     save_policy_every: int=None, show_every: int=None,
                      minibatch_size: int=None):
         """Train the agent to solve the current environment.
 
@@ -128,7 +131,6 @@ class BasePolicyGradientAgent(object):
             train_steps: The number of training steps
             experience_size: The number of environment steps used on each training step
             show_every: How often to show training info (in training steps)
-            save_model: Path to the folder where to save the trained model
             save_policy_every: How often to save policy information during training
                                (in training steps)
             minibatch_size: How many environment steps are pass to the NN at once.
@@ -136,16 +138,14 @@ class BasePolicyGradientAgent(object):
                             training step is used (experience_size)
         """
 
-        if save_policy_every is not None and save_model is None:
-            raise ValueError("If you want to save the policy values during training you must "
-                             "specify an output folder.")
-        else:
-            policy_values_dir = Path(save_model, "policy_values")
+        policy_values_dir = None
+        if save_policy_every is not None:
+            policy_values_dir = Path(self.agent_path, "policy_values")
             policy_values_dir.mkdir()
 
         train_steps_avg_rewards = []
         start_time = time.time()
-
+        training_steps = 0
         for i in range(train_steps):
             training_experience = self.collect_experience(experience_size)
             mean_reward = np.mean(training_experience.total_rewards)
@@ -164,10 +164,34 @@ class BasePolicyGradientAgent(object):
 
             batch_size = minibatch_size if minibatch_size is not None else len(states_batch)
             data = tf.data.Dataset.from_tensor_slices((states_batch, actions_batch, weights_batch))
+            # TODO: Check if randomizing has some effect
             data = data.shuffle(buffer_size=len(states_batch)).batch(batch_size)
 
-            for data_batch in data:
-                self.policy.train_step(data_batch[0], data_batch[1], data_batch[2])
+            for minibatch_step, data_batch in enumerate(data):
+
+                if i == 0 and minibatch_step == 0:
+                    tf.summary.trace_on(graph=True, profiler=True)
+                    # Call only one tf.function when tracing.
+                    self.policy(data_batch[0])
+                    with self.policy.summary_writer.as_default():
+                        tf.summary.trace_export(name="policy_call", step=0,
+                                                profiler_outdir=str(self.policy.train_log_dir))
+                    self.policy.summary_writer.flush()
+
+                logits, loss, log_probabilities = self.policy.train_step(
+                    data_batch[0], data_batch[1], data_batch[2])
+
+                if minibatch_step == len(data) - 1:
+                    with self.policy.summary_writer.as_default():
+                        # TODO: Add summaries for state values and action probabilities
+                        tf.summary.scalar("mean_reward", data=mean_reward, step=training_steps)
+                        tf.summary.histogram("logits", data=logits, step=training_steps)
+                        tf.summary.scalar("loss", data=loss, step=training_steps)
+                        tf.summary.histogram("log_probabilities", data=log_probabilities, step=training_steps)
+                        tf.summary.histogram("weights", data=data_batch[2], step=training_steps)
+                    self.policy.summary_writer.flush()
+
+            training_steps += 1
             train_steps_avg_rewards.append(mean_reward)
 
             if save_policy_every is not None:
@@ -180,18 +204,15 @@ class BasePolicyGradientAgent(object):
 
         moving_avg = np.convolve(train_steps_avg_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
-        if save_model is not None:
-            self.save_agent(save_model)
-            self.plot_training_info(moving_avg, save_model)
+        self.save_agent()
+        self.plot_training_info(moving_avg, self.agent_path)
 
-    def save_agent(self, output_dir: Path):
-        """
-        Save the policy neural network to files.
-        :param output_dir: Where to save the model.
-        """
-        logger.info(f"Saving trained policy to {output_dir}")
+    def save_agent(self):
+        """Save the policy neural network to files in the model path."""
+
+        logger.info(f"Saving trained policy to {self.policy.model_path}")
         start = time.time()
-        self.policy.save(Path(output_dir, "model"))
+        self.policy.save(self.policy.model_path)
         logger.info(f"Saving time {time.time() - start}")
 
     def load_model(self, model_dir: Path):

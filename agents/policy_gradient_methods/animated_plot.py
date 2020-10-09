@@ -15,7 +15,7 @@ from agents.policy_gradient_methods import ENVIRONMENTS, PG_METHODS
 
 tf.config.run_functions_eagerly(True)
 
-env_name = "HeuristicMountainCar-v0"
+env_name = "CartPole-v0"
 agent_name = "naive"
 experiment_name = "00.02"
 
@@ -24,6 +24,7 @@ experiment_dir = Path("C://", "Users", "Fico", "rl_experiments",
 config_file = Path(experiment_dir, "configurations.json")
 config = PG_METHODS[agent_name]["config"](experiment_name, config_file)
 agent = PG_METHODS[agent_name]["agent"](env=ENVIRONMENTS[env_name](),
+                                        agent_path=experiment_dir,
                                         agent_config=config)
 
 agent.load_model(Path(experiment_dir, "model"))

@@ -29,7 +29,8 @@ def main():
     config_file = Path(experiment_dir, "configurations.json")
     config = PG_METHODS[args.agent]["config"](experiment_dir.stem, config_file)
 
-    agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](), agent_config=config)
+    agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](), agent_path=experiment_dir,
+                                            agent_config=config)
 
     agent.load_model(Path(experiment_dir, "model"))
 
