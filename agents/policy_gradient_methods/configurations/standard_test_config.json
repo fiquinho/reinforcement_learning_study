@@ -7,5 +7,5 @@
     "hidden_layer_size": 10,
     "hidden_layers_count": 2,
     "activation": "relu",
-    "save_policy_every": null
+    "save_policy_every": 2
 }

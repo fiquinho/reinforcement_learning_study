@@ -138,10 +138,9 @@ class BasePolicyGradientAgent(object):
                             training step is used (experience_size)
         """
 
-        policy_values_dir = None
-        if save_policy_every is not None:
-            policy_values_dir = Path(self.agent_path, "policy_values")
-            policy_values_dir.mkdir()
+        ckpt = tf.train.Checkpoint(step=tf.Variable(-1), optimizer=self.policy.optimizer,
+                                   net=self.policy)
+        manager = tf.train.CheckpointManager(ckpt, str(self.policy.model_path) + "\\checkpoints", max_to_keep=3)
 
         train_steps_avg_rewards = []
         start_time = time.time()
@@ -183,7 +182,6 @@ class BasePolicyGradientAgent(object):
 
                 if minibatch_step == len(data) - 1:
                     with self.policy.summary_writer.as_default():
-                        # TODO: Add summaries for state values and action probabilities
                         probabilities = self.policy.get_probabilities(logits)
                         for action_idx, action in enumerate(self.env.actions):
                             action_probs = probabilities[:, action_idx]
@@ -203,9 +201,11 @@ class BasePolicyGradientAgent(object):
             training_steps += 1
             train_steps_avg_rewards.append(mean_reward)
 
+            ckpt.step.assign_add(1)
             if save_policy_every is not None:
                 if not i % save_policy_every:
-                    self.save_agent()
+                    save_path = manager.save()
+                    logger.info(f"Checkpoint saved for step {int(ckpt.step)}: {save_path}")
 
         moving_avg = np.convolve(train_steps_avg_rewards, np.ones((show_every,)) / show_every, mode='valid')
 

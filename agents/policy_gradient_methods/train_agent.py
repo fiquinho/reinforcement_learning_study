@@ -39,6 +39,8 @@ def main():
                         help="Configuration file for the experiment. If no file is "
                              "provided use the default configuration for the "
                              "selected environment and agent.")
+    parser.add_argument("--desc", type=str, default=None,
+                        help="Description of the experiment for future reference.")
     parser.add_argument("--output_dir", type=str, default=EXPERIMENTS_DIR,
                         help="Where to save the experiments files")
     parser.add_argument("--debug", action="store_true", default=False,
@@ -56,7 +58,7 @@ def main():
         config_file = Path(CONFIGS_DIR, f"{args.env}_{args.agent}_default.json")
     else:
         config_file = Path(args.config_file)
-    config = PG_METHODS[args.agent]["config"](args.name, config_file)
+    config = PG_METHODS[args.agent]["config"](args.name, config_file, args.desc)
 
     # Create experiment folder and handle old results
     output_dir = Path(args.output_dir)
@@ -72,12 +74,11 @@ def main():
 
     # Save experiments configurations and start experiment log
     prepare_file_logger(logger, logging.INFO, Path(agent_folder, "experiment.log"))
-
     logger.info(f"Running {args.agent} policy gradient on {args.env}")
-
     config.log_configurations(logger)
     config.copy_config(agent_folder)
 
+    # Handle default show_every value
     show_every = int(config.training_steps * 0.1) if config.show_every is None else config.show_every
 
     # Create and train the agent

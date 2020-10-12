@@ -13,7 +13,7 @@ from code_utils.config_utils import BaseConfig
 
 class BaseAgentConfig(BaseConfig):
 
-    def __init__(self, name: str, config_file: Path):
+    def __init__(self, name: str, config_file: Path, desc: str=None):
         """Agent configurations for Naive and Reward to Go Policy Gradient training.
 
         Args:
@@ -22,6 +22,7 @@ class BaseAgentConfig(BaseConfig):
         """
         BaseConfig.__init__(self, config_file)
         self.name = name
+        self.desc = desc
         self.training_steps = self.config_dict["training_steps"]
         self.show_every = self.config_dict["show_every"]
         self.learning_rate = self.config_dict["learning_rate"]
@@ -35,14 +36,14 @@ class BaseAgentConfig(BaseConfig):
 
 class REINFORCEAgentConfig(BaseAgentConfig):
 
-    def __init__(self, name: str, config_file: Path):
+    def __init__(self, name: str, config_file: Path, desc: str):
         """Agent configurations for REINFORCE Policy Gradient training.
 
         Args:
             name: The name of the experiment/agent
             config_file: The configurations file (must be .json)
         """
-        BaseAgentConfig.__init__(self, name, config_file)
+        BaseAgentConfig.__init__(self, name, config_file, desc)
         self.discount_factor = self.config_dict["discount_factor"]
 
 
