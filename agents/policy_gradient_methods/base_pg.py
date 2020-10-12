@@ -205,11 +205,7 @@ class BasePolicyGradientAgent(object):
 
             if save_policy_every is not None:
                 if not i % save_policy_every:
-                    # TODO: Make this better changing policy_values_plot to something more generic
-                    possible_states, states_predictions = self.env.policy_values_plot(
-                        Path(policy_values_dir, f"policy_values_{i}.png"))
-                    with open(Path(policy_values_dir, f"policy_values_{i}.pickle"), "wb") as pfile:
-                        pickle.dump(states_predictions, pfile, protocol=pickle.HIGHEST_PROTOCOL)
+                    self.save_agent()
 
         moving_avg = np.convolve(train_steps_avg_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
@@ -276,4 +272,4 @@ class BasePolicyGradientAgent(object):
 
         self.env.reset_environment()
 
-        return episode.total_reward, win
+        return episode, win

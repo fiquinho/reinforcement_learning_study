@@ -150,6 +150,9 @@ class Environment(object):
     def win_condition(episode: Episode):
         raise NotImplementedError
 
+    def close(self):
+        raise NotImplementedError
+
 
 class CartPoleEnvironment(Environment):
 
@@ -184,6 +187,9 @@ class CartPoleEnvironment(Environment):
     @staticmethod
     def win_condition(episode: Episode):
         return episode.total_reward >= 200
+
+    def close(self):
+        self.env.close()
 
 
 class AcrobotEnvironment(Environment):
@@ -221,6 +227,9 @@ class AcrobotEnvironment(Environment):
     @staticmethod
     def win_condition(episode: Episode):
         return episode.total_reward >= 200
+
+    def close(self):
+        self.env.close()
 
 
 class HeuristicMountainCarEnvironment(Environment):
@@ -260,3 +269,6 @@ class HeuristicMountainCarEnvironment(Environment):
     @staticmethod
     def win_condition(episode: Episode):
         return episode.states[-1][0] >= 0.5
+
+    def close(self):
+        self.env.close()

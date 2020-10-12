@@ -36,14 +36,16 @@ def main():
 
     results = []
     for i in range(args.episodes):
-        total_reward, win = agent.play_game(plot_game=args.render_games, delay=None)
+        episode, win = agent.play_game(plot_game=args.render_games, delay=None)
         results.append(win)
 
-        print(f"Episode = {i} - Total Reward = {total_reward} - Victory = {win}")
+        print(f"Episode = {i} - Total Reward = {episode.total_reward} - Victory = {win} - "
+              f"Episode length = {len(episode)}")
 
-    print(f"Agent performance = {sum(results) * 100 / len(results)} % of Wins")
+    if results[0] is not None:
+        print(f"Agent performance = {sum(results) * 100 / len(results)} % of Wins")
 
-    agent.env.env.close()
+    agent.env.close()
 
 
 if __name__ == '__main__':

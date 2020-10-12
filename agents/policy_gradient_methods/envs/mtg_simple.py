@@ -89,3 +89,6 @@ class MoveToGoalSimpleSmallEnvironment(Environment):
             converted_sate = self.convert_sate(state)
             converted_possible_states.append(converted_sate)
         return converted_possible_states
+
+    def close(self):
+        self.env.close()

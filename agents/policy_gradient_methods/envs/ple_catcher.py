@@ -2,6 +2,7 @@ import os
 import sys
 from pathlib import Path
 
+import pygame
 import numpy as np
 
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
@@ -55,3 +56,6 @@ class CatcherEnvironment(Environment):
     @staticmethod
     def win_condition(episode: Episode):
         return None
+
+    def close(self):
+        pygame.quit()
