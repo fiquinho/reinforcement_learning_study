@@ -184,6 +184,15 @@ class BasePolicyGradientAgent(object):
                 if minibatch_step == len(data) - 1:
                     with self.policy.summary_writer.as_default():
                         # TODO: Add summaries for state values and action probabilities
+                        probabilities = self.policy.get_probabilities(logits)
+                        for action_idx, action in enumerate(self.env.actions):
+                            action_probs = probabilities[:, action_idx]
+                            tf.summary.histogram(f"{action}_prob", data=action_probs, step=training_steps)
+                        if self.env.state_names is not None:
+                            for state_idx, state in enumerate(self.env.state_names):
+                                state_attribute_hist = data_batch[0][:, state_idx]
+                                tf.summary.histogram(f"{state}", data=state_attribute_hist, step=training_steps)
+
                         tf.summary.scalar("mean_reward", data=mean_reward, step=training_steps)
                         tf.summary.histogram("logits", data=logits, step=training_steps)
                         tf.summary.scalar("loss", data=loss, step=training_steps)

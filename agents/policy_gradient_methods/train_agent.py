@@ -68,7 +68,7 @@ def main():
             raise FileExistsError(f"The experiment {agent_folder} already exists."
                                   f"Change output folder, experiment name or use -replace "
                                   f"to overwrite.")
-    agent_folder.mkdir()
+    agent_folder.mkdir(parents=True)
 
     # Save experiments configurations and start experiment log
     prepare_file_logger(logger, logging.INFO, Path(agent_folder, "experiment.log"))
