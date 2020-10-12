@@ -1,0 +1,11 @@
+{
+    "training_steps": 2000,
+    "show_every": 10,
+    "learning_rate": 0.0001,
+    "experience_size": 4000,
+    "minibatch_size": null,
+    "hidden_layer_size": 40,
+    "hidden_layers_count": 4,
+    "activation": "relu",
+    "save_policy_every": null
+}

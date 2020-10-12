@@ -8,7 +8,8 @@ from .pg_methods import NaivePolicyGradientAgent, RewardToGoPolicyGradientAgent,
 ENVIRONMENTS = {"CartPole-v0": CartPoleEnvironment,
                 "Acrobot-v1": AcrobotEnvironment,
                 "HeuristicMountainCar-v0": HeuristicMountainCarEnvironment,
-                "MoveToGoalSimpleSmall": MoveToGoalSimpleSmallEnvironment}
+                "MoveToGoalSimpleSmall": MoveToGoalSimpleSmallEnvironment,
+                "Catcher": CatcherEnvironment}
 
 PG_METHODS = {"naive": {"agent": NaivePolicyGradientAgent,
                         "config": BaseAgentConfig},
