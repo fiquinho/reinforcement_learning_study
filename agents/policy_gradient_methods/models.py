@@ -17,12 +17,18 @@ logger = logging.getLogger()
 
 
 def feed_forward_model_constructor(input_dim, output_dim):
+    """Creates a tf.keras.Model subclass for a Feed Forward Neural Network
+    that represents a categorical stochastic policy.
+    Args:
+        input_dim: The length of the state vector
+        output_dim: The number of possible actions
 
+    Returns:
+        A class to instantiate the model object.
+    """
     class FeedForwardPolicyGradientModel(Model):
-        """
-        Feed Forward Neural Network that represents a stochastic policy.
-        The input shapes are built on first usage so any environment can be used.
-        The output shape should be the number of possible actions.
+        """Feed Forward Neural Network that represents a categorical stochastic policy.
+        The input and output sizes are already defined.
         """
 
         def __init__(self, model_path: Path, layer_size: int, learning_rate: float,
@@ -59,6 +65,7 @@ def feed_forward_model_constructor(input_dim, output_dim):
             self.summary_writer = tf.summary.create_file_writer(str(self.train_log_dir))
 
         def get_config(self):
+            """Used by tf.keras to load a saved model."""
             return {"layer_size": self.layer_size,
                     "learning_rate": self.learning_rate,
                     "hidden_layers_count": self.hidden_layers_count,
@@ -66,6 +73,8 @@ def feed_forward_model_constructor(input_dim, output_dim):
 
         @tf.function(input_signature=(tf.TensorSpec(shape=[None, input_dim], dtype=tf.float32), ))
         def call(self, inputs: tf.Tensor):
+            """See base Class."""
+
             logger.info("[Retrace] call")
             x = self.input_layer(inputs)
             for layer in self.hidden_layers:
@@ -76,7 +85,10 @@ def feed_forward_model_constructor(input_dim, output_dim):
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, input_dim], dtype=tf.float32),
                                       tf.TensorSpec(shape=[None], dtype=tf.int32),
                                       tf.TensorSpec(shape=[None], dtype=tf.float32)])
-        def train_step(self, sates: tf.Tensor, actions: tf.Tensor, weights: tf.Tensor):
+        def train_step(self, sates: tf.Tensor, actions: tf.Tensor,
+                       weights: tf.Tensor) -> (tf.Tensor, tf.Tensor, tf.Tensor):
+            """See base Class."""
+
             logger.info("[Retrace] train_step")
             with tf.GradientTape() as tape:
                 logits = self(sates)
@@ -90,19 +102,47 @@ def feed_forward_model_constructor(input_dim, output_dim):
             return logits, loss, log_probabilities
 
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, output_dim], dtype=tf.float32)])
-        def get_probabilities(self, logits: tf.Tensor):
+        def get_probabilities(self, logits: tf.Tensor) -> tf.Tensor:
+            """Gets the actual probabilities of each action for each set of logits.
+
+            Args:
+                logits: The output of this model: self(states)
+
+            Returns:
+                The probabilities (for each set of logits they add up to 1)
+            """
+
             logger.info("[Retrace] get_probabilities")
             probabilities = tf.nn.softmax(logits)
             return probabilities
 
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, output_dim], dtype=tf.float32)])
-        def get_log_probabilities(self, logits: tf.Tensor):
+        def get_log_probabilities(self, logits: tf.Tensor) -> tf.Tensor:
+            """Gets the logarithmic probabilities of each action for each set of logits.
+
+            Args:
+                logits: The output of this model: self(states)
+
+            Returns:
+                The logarithmic probabilities
+            """
+
             logger.info("[Retrace] get_log_probabilities")
             log_probabilities = tf.nn.log_softmax(logits)
             return log_probabilities
 
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, input_dim], dtype=tf.float32)])
-        def produce_actions(self, states: tf.Tensor):
+        def produce_actions(self, states: tf.Tensor) -> tf.Tensor:
+            """Get a sample from the action probability distribution produced
+            by the model, for each passed state.
+
+            Args:
+                states: The list of states representations
+
+            Returns:
+                The sampled action for each state
+            """
+
             logger.info("[Retrace] produce_actions")
             logits = self(states)
             actions = tf.random.categorical(logits, 1)
