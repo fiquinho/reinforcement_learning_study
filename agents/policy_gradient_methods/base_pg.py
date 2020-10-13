@@ -22,7 +22,7 @@ class TrainingExperience(object):
 
     def __init__(self, states: list, weights: list, actions: list,
                  total_rewards: list, episode_lengths: list):
-        """Create instance of collected experiences to be feed to the network.
+        """Creates an instance of collected experiences to be feed to the network.
 
         Args:
             states: The list of states
@@ -78,25 +78,34 @@ class BasePolicyGradientAgent(object):
                                          activation=activation)
         self.ckpt = tf.train.Checkpoint(step=tf.Variable(-1), optimizer=self.policy.optimizer,
                                         net=self.policy)
-        self.ckpt_manager = tf.train.CheckpointManager(self.ckpt,
-                                                       str(self.policy.model_path) + "\\checkpoints", max_to_keep=3)
+        self.progress_ckpt = tf.train.Checkpoint(step=tf.Variable(-1), optimizer=self.policy.optimizer,
+                                                 net=self.policy)
+        self.ckpt_manager = tf.train.CheckpointManager(self.ckpt, str(self.policy.model_path) + "\\checkpoints",
+                                                       max_to_keep=3)
+        self.progress_ckpt_manager = tf.train.CheckpointManager(
+            self.progress_ckpt, str(self.policy.model_path) + "\\progress_checkpoints", max_to_keep=None)
 
     def get_training_experience(self, episodes: EpisodesBatch) -> TrainingExperience:
-        """
-        Transforms an EpisodesBatch into a TrainingExperience.
+        """Transforms an EpisodesBatch into a TrainingExperience.
         Each algorithm should implement this with the appropriate conversion.
-        :param episodes: An EpisodesBatch object
-        :return: A TrainingExperience object
+
+        Args:
+            episodes: The raw collected episodes batch
+
+        Returns:
+            A TrainingExperience object with data ready to be feed to the network
         """
         raise NotImplementedError
 
     def collect_experience(self, size: int) -> TrainingExperience:
-        """
-        Collects a batch of steps in the environment using the current policy
+        """Collects a batch of steps in the environment using the current policy
         to be feed to the neural network.
 
-        :param size: Batch size
-        :return: An ExperienceBatch object with the collected steps information.
+        Args:
+            size: The max amount of environment steps to collect
+
+        Returns:
+            A TrainingExperience object with data ready to be feed to the network
         """
 
         episodes_batch = EpisodesBatch(max_size=size)
@@ -144,6 +153,7 @@ class BasePolicyGradientAgent(object):
         train_steps_avg_rewards = []
         start_time = time.time()
         training_steps = 0
+        progress_save = int(train_steps * 0.05)
         for i in range(train_steps):
             training_experience = self.collect_experience(experience_size)
             mean_reward = np.mean(training_experience.total_rewards)
@@ -201,6 +211,10 @@ class BasePolicyGradientAgent(object):
             train_steps_avg_rewards.append(mean_reward)
 
             self.ckpt.step.assign_add(1)
+            self.progress_ckpt.step.assign_add(1)
+            if not i % progress_save:
+                progress_save_path = self.progress_ckpt_manager.save()
+                logger.info(f"Progress checkpoint saved for step {int(self.progress_ckpt.step)}: {progress_save_path}")
             if save_policy_every is not None:
                 if not i % save_policy_every:
                     save_path = self.ckpt_manager.save()
@@ -220,9 +234,11 @@ class BasePolicyGradientAgent(object):
         logger.info(f"Saving time {time.time() - start}")
 
     def load_model(self, model_dir: Path):
-        """
-        Load a trained policy from files.
-        :param model_dir: Where the trained model is stored.
+        """Loads a trained policy from files. If no save model is found,
+        it loads the latest checkpoint available.
+
+        Args:
+            model_dir: Where the trained model is stored.
         """
         if Path(model_dir, "saved_model.pb").exists():
             self.policy = tf.keras.models.load_model(model_dir)
@@ -232,10 +248,11 @@ class BasePolicyGradientAgent(object):
 
     @staticmethod
     def plot_training_info(moving_avg: np.array, agent_folder: Path=None):
-        """
-        Plot the reward moving average during training.
-        :param moving_avg: The moving average data
-        :param agent_folder: Where to save the generated plot
+        """Plots the training reward moving average.
+
+        Args:
+            moving_avg: The moving average data
+            agent_folder: Where to save the generated plot
         """
         plt.figure(figsize=(5, 5))
 
@@ -248,7 +265,16 @@ class BasePolicyGradientAgent(object):
         if agent_folder is not None:
             plt.savefig(Path(agent_folder, "reward_moving_average.png"))
 
-    def play_game(self, plot_game: bool=False, delay: float=None):
+    def play_game(self, plot_game: bool=False, delay: float=None) -> Episode:
+        """Plays a full episode using the current policy.
+
+        Args:
+            plot_game: If the environment should be plotted
+            delay: Delay between environment steps (frames)
+
+        Returns:
+            The full played episode
+        """
         self.env.reset_environment()
         done = False
         states = []
@@ -271,8 +297,7 @@ class BasePolicyGradientAgent(object):
             actions.append(action)
 
         episode = Episode(states, actions, rewards)
-        win = self.env.win_condition(episode)
 
         self.env.reset_environment()
 
-        return episode, win
+        return episode

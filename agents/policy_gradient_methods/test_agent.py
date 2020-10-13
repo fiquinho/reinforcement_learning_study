@@ -36,7 +36,8 @@ def main():
 
     results = []
     for i in range(args.episodes):
-        episode, win = agent.play_game(plot_game=args.render_games, delay=None)
+        episode = agent.play_game(plot_game=args.render_games, delay=None)
+        win = agent.env.win_condition(episode)
         results.append(win)
 
         print(f"Episode = {i} - Total Reward = {episode.total_reward} - Victory = {win} - "
