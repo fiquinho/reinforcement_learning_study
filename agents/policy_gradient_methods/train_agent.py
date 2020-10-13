@@ -63,9 +63,11 @@ def main():
     # Create experiment folder and handle old results
     output_dir = Path(args.output_dir)
     agent_folder = Path(output_dir, args.env, args.agent, config.name)
+    deleted_old = False
     if agent_folder.exists():
         if args.replace:
             shutil.rmtree(agent_folder)
+            deleted_old = True
         else:
             raise FileExistsError(f"The experiment {agent_folder} already exists."
                                   f"Change output folder, experiment name or use -replace "
@@ -75,6 +77,8 @@ def main():
     # Save experiments configurations and start experiment log
     prepare_file_logger(logger, logging.INFO, Path(agent_folder, "experiment.log"))
     logger.info(f"Running {args.agent} policy gradient on {args.env}")
+    if deleted_old:
+        logger.info(f"Deleted old experiment in {agent_folder}")
     config.log_configurations(logger)
     config.copy_config(agent_folder)
 

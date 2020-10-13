@@ -1,6 +1,5 @@
 import logging
 import time
-import pickle
 import os
 import sys
 from pathlib import Path
@@ -77,6 +76,10 @@ class BasePolicyGradientAgent(object):
                                          learning_rate=learning_rate,
                                          hidden_layers_count=hidden_layers_count,
                                          activation=activation)
+        self.ckpt = tf.train.Checkpoint(step=tf.Variable(-1), optimizer=self.policy.optimizer,
+                                        net=self.policy)
+        self.ckpt_manager = tf.train.CheckpointManager(self.ckpt,
+                                                       str(self.policy.model_path) + "\\checkpoints", max_to_keep=3)
 
     def get_training_experience(self, episodes: EpisodesBatch) -> TrainingExperience:
         """
@@ -138,10 +141,6 @@ class BasePolicyGradientAgent(object):
                             training step is used (experience_size)
         """
 
-        ckpt = tf.train.Checkpoint(step=tf.Variable(-1), optimizer=self.policy.optimizer,
-                                   net=self.policy)
-        manager = tf.train.CheckpointManager(ckpt, str(self.policy.model_path) + "\\checkpoints", max_to_keep=3)
-
         train_steps_avg_rewards = []
         start_time = time.time()
         training_steps = 0
@@ -201,11 +200,11 @@ class BasePolicyGradientAgent(object):
             training_steps += 1
             train_steps_avg_rewards.append(mean_reward)
 
-            ckpt.step.assign_add(1)
+            self.ckpt.step.assign_add(1)
             if save_policy_every is not None:
                 if not i % save_policy_every:
-                    save_path = manager.save()
-                    logger.info(f"Checkpoint saved for step {int(ckpt.step)}: {save_path}")
+                    save_path = self.ckpt_manager.save()
+                    logger.info(f"Checkpoint saved for step {int(self.ckpt.step)}: {save_path}")
 
         moving_avg = np.convolve(train_steps_avg_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
@@ -225,7 +224,11 @@ class BasePolicyGradientAgent(object):
         Load a trained policy from files.
         :param model_dir: Where the trained model is stored.
         """
-        self.policy = tf.keras.models.load_model(model_dir)
+        if Path(model_dir, "saved_model.pb").exists():
+            self.policy = tf.keras.models.load_model(model_dir)
+        else:
+            self.ckpt.restore(self.ckpt_manager.latest_checkpoint)
+            logger.info(f"Restored model from checkpoint {self.ckpt_manager.latest_checkpoint}")
 
     @staticmethod
     def plot_training_info(moving_avg: np.array, agent_folder: Path=None):
