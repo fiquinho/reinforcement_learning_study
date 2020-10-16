@@ -31,7 +31,7 @@ class CatcherEnvironment(Environment):
 
     def get_environment_state(self) -> np.array:
         state = list(self.p.getGameState().values())
-        return np.array(state)
+        return np.array(state, dtype=np.float32) / 32.
 
     def environment_step(self, action: int) -> (np.array, float, bool):
 
