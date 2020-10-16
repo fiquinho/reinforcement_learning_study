@@ -1,5 +1,5 @@
 {
-    "training_steps": 10,
+    "training_steps": 20,
     "show_every": 2,
     "learning_rate": 0.001,
     "experience_size": 400,

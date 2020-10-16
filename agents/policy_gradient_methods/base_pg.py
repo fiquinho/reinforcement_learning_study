@@ -136,7 +136,7 @@ class BasePolicyGradientAgent(object):
 
     def train_policy(self, train_steps: int, experience_size: int,
                      save_policy_every: int=None, show_every: int=None,
-                     minibatch_size: int=None):
+                     minibatch_size: int=None) -> float:
         """Train the agent to solve the current environment.
 
         Args:
@@ -148,12 +148,17 @@ class BasePolicyGradientAgent(object):
             minibatch_size: How many environment steps are pass to the NN at once.
                             If None, the total number of steps collected for each
                             training step is used (experience_size)
+        Returns
+            The final policy test mean reward
         """
 
         train_steps_avg_rewards = []
         start_time = time.time()
         training_steps = 0
         progress_save = int(train_steps * 0.05)
+        best_step = None
+        best_checkpoint = None
+        best_mean_score = float("-inf")
         for i in range(train_steps):
             training_experience = self.collect_experience(experience_size)
             mean_reward = np.mean(training_experience.total_rewards)
@@ -217,13 +222,25 @@ class BasePolicyGradientAgent(object):
                 logger.info(f"Progress checkpoint saved for step {int(self.progress_ckpt.step)}: {progress_save_path}")
             if save_policy_every is not None:
                 if not i % save_policy_every:
-                    save_path = self.ckpt_manager.save()
-                    logger.info(f"Checkpoint saved for step {int(self.ckpt.step)}: {save_path}")
+                    if mean_reward >= best_mean_score:
+                        best_mean_score = mean_reward
+                        best_step = i
+                        save_path = self.ckpt_manager.save()
+                        best_checkpoint = save_path
+                        logger.info(f"New best model - Test mean reward = {best_mean_score}")
+                        logger.info(f"Checkpoint saved for step {int(self.ckpt.step)}: {save_path}")
 
         moving_avg = np.convolve(train_steps_avg_rewards, np.ones((show_every,)) / show_every, mode='valid')
 
+        # Load best checkpoint and save it
+        logger.info(f"Best model in step {best_step} - {best_checkpoint}")
+        self.ckpt.restore(best_checkpoint)
+        test_reward = self.test_agent(episodes=100)
+        logger.info(f"Best model test: {100} episodes mean reward = {test_reward}")
         self.save_agent()
         self.plot_training_info(moving_avg, self.agent_path)
+
+        return test_reward
 
     def save_agent(self):
         """Save the policy neural network to files in the model path."""
@@ -301,3 +318,12 @@ class BasePolicyGradientAgent(object):
         self.env.reset_environment()
 
         return episode
+
+    def test_agent(self, episodes: int=100):
+        total_rewards = []
+        for i in range(episodes):
+            episode = self.play_game(plot_game=False, delay=None)
+            total_rewards.append(episode.total_reward)
+
+        mean_reward = np.mean(total_rewards)
+        return mean_reward

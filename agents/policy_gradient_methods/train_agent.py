@@ -3,8 +3,10 @@ import logging
 import os
 import sys
 import shutil
+import json
 from pathlib import Path
 
+import git
 import tensorflow as tf
 
 SCRIPT_DIR = Path(os.path.abspath(sys.argv[0]))
@@ -53,6 +55,10 @@ def main():
     if args.debug:
         tf.config.run_functions_eagerly(True)
 
+    # Get git version
+    repo = git.Repo(search_parent_directories=True)
+    sha = repo.head.object.hexsha
+
     # Use provided configurations file or the default for the selected environment and agent
     if args.config_file is None:
         config_file = Path(CONFIGS_DIR, f"{args.env}_{args.agent}_default.json")
@@ -86,10 +92,20 @@ def main():
     show_every = int(config.training_steps * 0.1) if config.show_every is None else config.show_every
 
     # Create and train the agent
-    agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](), agent_path=agent_folder, agent_config=config)
-    agent.train_policy(train_steps=config.training_steps, experience_size=config.experience_size,
-                       show_every=show_every, save_policy_every=config.save_policy_every,
-                       minibatch_size=config.minibatch_size)
+    agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](),
+                                            agent_path=agent_folder,
+                                            agent_config=config)
+    test_reward = agent.train_policy(train_steps=config.training_steps,
+                                     experience_size=config.experience_size,
+                                     show_every=show_every,
+                                     save_policy_every=config.save_policy_every,
+                                     minibatch_size=config.minibatch_size)
+
+    experiment_info = {"test_reward": float(test_reward),
+                       "description": args.desc,
+                       "git_hash": sha}
+    with open(Path(agent_folder, "experiment_information.json"), "w") as outfile:
+        json.dump(experiment_info, outfile, indent=4)
 
 
 if __name__ == '__main__':
