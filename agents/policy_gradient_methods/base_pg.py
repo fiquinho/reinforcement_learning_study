@@ -21,7 +21,7 @@ class TrainingExperience(object):
     """A batch of collected experience to do a training step in the network"""
 
     def __init__(self, states: list, weights: list, actions: list,
-                 total_rewards: list, episode_lengths: list):
+                 total_rewards: list, episode_lengths: list, action_space: str):
         """Creates an instance of collected experiences to be feed to the network.
 
         Args:
@@ -31,13 +31,21 @@ class TrainingExperience(object):
             actions: The list of actions
             total_rewards: The total reward obtained in each episode of the collected experience.
             episode_lengths: The length of each episode of the collected experience.
+            action_space: The type of action space. One of ["continuous", "discrete"]
         """
         assert len(states) == len(weights) == len(actions)
         assert len(total_rewards) == len(episode_lengths)
 
         self.states = np.array(states, dtype=np.float32)
         self.weights = np.array(weights, dtype=np.float32)
-        self.actions = np.array(actions, dtype=np.int32)
+
+        if action_space == "discrete":
+            self.actions = np.array(actions, dtype=np.int32)
+        elif action_space == "continuous":
+            self.actions = np.array(actions, dtype=np.float32)
+        else:
+            raise ValueError(f"Found unsupported action space type = {action_space}")
+
         self.total_rewards = np.array(total_rewards, dtype=np.float32)
         self.episode_lengths = np.array(episode_lengths, dtype=np.int32)
 
@@ -70,7 +78,14 @@ class BasePolicyGradientAgent(object):
         self.env = env
         self.agent_path = agent_path
         model_path = Path(agent_path, "model")
-        policy_constructor = feed_forward_model_constructor(env.state_space_n, env.action_space_n)
+
+        if self.env.action_space == "discrete":
+            policy_constructor = feed_forward_discrete_model_constructor(env.state_space_n, env.action_space_n)
+        elif self.env.action_space == "continuous":
+            policy_constructor = feed_forward_continuous_model_constructor(env.state_space_n, env.action_space_n)
+        else:
+            raise ValueError(f"Found unsupported action space type = {self.env.action_space}")
+
         self.policy = policy_constructor(model_path=model_path,
                                          layer_size=layer_size,
                                          learning_rate=learning_rate,
@@ -127,7 +142,7 @@ class BasePolicyGradientAgent(object):
                 actions.append(action)
                 rewards.append(reward)
 
-            episode = Episode(states, actions, rewards)
+            episode = Episode(states, actions, rewards, self.env.action_space)
             episodes_batch.add_episode(episode=episode)
 
         training_experience = self.get_training_experience(episodes=episodes_batch)
@@ -172,8 +187,13 @@ class BasePolicyGradientAgent(object):
                     start_time = time.time()
 
             states_batch = tf.constant(training_experience.states, dtype=np.float32)
-            actions_batch = tf.constant(training_experience.actions, dtype=np.int32)
             weights_batch = tf.constant(training_experience.weights, dtype=np.float32)
+            if self.env.action_space == "discrete":
+                actions_batch = tf.constant(training_experience.actions, dtype=np.int32)
+            elif self.env.action_space == "continuous":
+                actions_batch = tf.constant(training_experience.actions, dtype=np.float32)
+            else:
+                raise ValueError(f"Found unsupported action space type = {self.env.action_space}")
 
             batch_size = minibatch_size if minibatch_size is not None else len(states_batch)
             data = tf.data.Dataset.from_tensor_slices((states_batch, actions_batch, weights_batch))
@@ -191,25 +211,36 @@ class BasePolicyGradientAgent(object):
                                                 profiler_outdir=str(self.policy.train_log_dir))
                     self.policy.summary_writer.flush()
 
-                logits, loss, log_probabilities = self.policy.train_step(
+                policy_outputs, loss, log_probabilities = self.policy.train_step(
                     data_batch[0], data_batch[1], data_batch[2])
 
                 if minibatch_step == len(data) - 1:
                     with self.policy.summary_writer.as_default():
-                        probabilities = self.policy.get_probabilities(logits)
-                        for action_idx, action in enumerate(self.env.actions):
-                            action_probs = probabilities[:, action_idx]
-                            tf.summary.histogram(f"{action}_prob", data=action_probs, step=training_steps)
                         if self.env.state_names is not None:
                             for state_idx, state in enumerate(self.env.state_names):
                                 state_attribute_hist = data_batch[0][:, state_idx]
                                 tf.summary.histogram(f"{state}", data=state_attribute_hist, step=training_steps)
 
                         tf.summary.scalar("mean_reward", data=mean_reward, step=training_steps)
-                        tf.summary.histogram("logits", data=logits, step=training_steps)
                         tf.summary.scalar("loss", data=loss, step=training_steps)
                         tf.summary.histogram("log_probabilities", data=log_probabilities, step=training_steps)
                         tf.summary.histogram("weights", data=data_batch[2], step=training_steps)
+
+                        if self.env.action_space == "discrete":
+                            probabilities = self.policy.get_probabilities(policy_outputs[0])
+                            for action_idx, action in enumerate(self.env.actions):
+                                action_probs = probabilities[:, action_idx]
+                                tf.summary.histogram(f"{action}_prob", data=action_probs, step=training_steps)
+                            tf.summary.histogram("logits", data=policy_outputs[0], step=training_steps)
+                        elif self.env.action_space == "continuous":
+                            for action_idx, action in enumerate(self.env.actions):
+                                action_mus = policy_outputs[0][:, action_idx]
+                                action_sigmas = policy_outputs[1][:, action_idx]
+                                tf.summary.histogram(f"{action}_mu", data=action_mus, step=training_steps)
+                                tf.summary.histogram(f"{action}_sigma", data=action_sigmas, step=training_steps)
+                        else:
+                            raise ValueError(f"Found unsupported action space type = {self.env.action_space}")
+
                     self.policy.summary_writer.flush()
 
             training_steps += 1
@@ -313,7 +344,7 @@ class BasePolicyGradientAgent(object):
             rewards.append(reward)
             actions.append(action)
 
-        episode = Episode(states, actions, rewards)
+        episode = Episode(states, actions, rewards, self.env.action_space)
 
         self.env.reset_environment()
 

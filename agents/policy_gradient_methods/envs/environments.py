@@ -14,18 +14,26 @@ class Episode(object):
         actions: A list with all the actions taken in the episode
         total_reward: The total reward obtained in the episode
     """
-    def __init__(self, states: list, actions: list, rewards: list):
+    def __init__(self, states: list, actions: list, rewards: list, action_space: str):
         """Creates a new episode.
 
         Args:
             states: A list with all the states that occurred in the episode
             rewards: A list with all the rewards obtained in the episode
             actions: A list with all the actions taken in the episode
+            action_space: The type of action space. One of ["continuous", "discrete"]
         """
         assert len(states) == len(rewards) == len(actions)
         self.states = np.array(states, dtype=np.float32)
         self.rewards = np.array(rewards, dtype=np.float32)
-        self.actions = np.array(actions, dtype=np.int32)
+
+        if action_space == "discrete":
+            self.actions = np.array(actions, dtype=np.int32)
+        elif action_space == "continuous":
+            self.actions = np.array(actions, dtype=np.float32)
+        else:
+            raise ValueError(f"Found unsupported action space type = {action_space}")
+
         self.total_reward = np.sum(self.rewards)
 
     def __len__(self) -> int:
@@ -88,21 +96,24 @@ class Environment(object):
     policy gradient algorithm. All methods need to be implemented.
     """
     def __init__(self, env, action_space_n: int, state_space_n: int,
-                 actions: List[str], state_names: List[str]=None):
+                 actions: List[str], state_names: List[str]=None,
+                 action_space: str="discrete"):
         """Create a new Environment object.
 
         Args:
-            env: An object with the environment implementation.
+            env: An object with the environment implementation
             action_space_n: The number of possible actions
             state_space_n: The length of the state vector representation
             actions: A list with the actions names
             state_names: A list with the state attributes names
+            action_space: The type of action space. One of ["continuous", "discrete"]
         """
         self.env = env
         self.action_space_n = action_space_n
         self.state_space_n = state_space_n
         self.actions = actions
         self.state_names = state_names
+        self.action_space = action_space
 
     def reset_environment(self):
         """Reset the environment to start a new episode."""
@@ -121,7 +132,7 @@ class Environment(object):
         """Make a move in the environment with given action.
 
         Args:
-            action: The action index
+            action: The action index or action value
 
         Returns:
             next_environment_state (np.array), reward (float), terminated_environment (bool)

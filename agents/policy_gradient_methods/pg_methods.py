@@ -87,7 +87,7 @@ class NaivePolicyGradientAgent(BasePolicyGradientAgent):
         actions_batch = np.concatenate(actions_batch, axis=0)
 
         return TrainingExperience(states_batch, weights_batch, actions_batch,
-                                  total_rewards, episode_lengths)
+                                  total_rewards, episode_lengths, self.env.action_space)
 
 
 class RewardToGoPolicyGradientAgent(BasePolicyGradientAgent):
@@ -128,7 +128,7 @@ class RewardToGoPolicyGradientAgent(BasePolicyGradientAgent):
         weights_batch = np.concatenate(weights_batch, axis=0)
 
         return TrainingExperience(states_batch, weights_batch, actions_batch,
-                                  total_rewards, episode_lengths)
+                                  total_rewards, episode_lengths, self.env.action_space)
 
 
 class REINFORCEPolicyGradientAgent(BasePolicyGradientAgent):
@@ -173,4 +173,4 @@ class REINFORCEPolicyGradientAgent(BasePolicyGradientAgent):
         weights_batch = np.concatenate(weights_batch, axis=0)
 
         return TrainingExperience(states_batch, weights_batch, actions_batch,
-                                  total_rewards, episode_lengths)
+                                  total_rewards, episode_lengths, self.env.action_space)

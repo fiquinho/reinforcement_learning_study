@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import json
+import time
 from pathlib import Path
 
 import git
@@ -95,15 +96,18 @@ def main():
     agent = PG_METHODS[args.agent]["agent"](env=ENVIRONMENTS[args.env](),
                                             agent_path=agent_folder,
                                             agent_config=config)
+    start_time = time.time()
     test_reward = agent.train_policy(train_steps=config.training_steps,
                                      experience_size=config.experience_size,
                                      show_every=show_every,
                                      save_policy_every=config.save_policy_every,
                                      minibatch_size=config.minibatch_size)
+    train_time = time.time() - start_time
 
-    experiment_info = {"test_reward": float(test_reward),
+    experiment_info = {"mean_test_reward": float(test_reward),
                        "description": args.desc,
-                       "git_hash": sha}
+                       "git_hash": sha,
+                       "train_time": train_time}
     with open(Path(agent_folder, "experiment_information.json"), "w") as outfile:
         json.dump(experiment_info, outfile, indent=4)
 
