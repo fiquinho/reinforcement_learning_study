@@ -11,7 +11,8 @@ ENVIRONMENTS = {"CartPole-v0": CartPoleEnvironment,
                 "MoveToGoalSimpleSmall": MoveToGoalSimpleSmallEnvironment,
                 "Catcher": CatcherEnvironment,
                 "FlappyBird": FlappyBirdEnvironment,
-                "Pendulum-v0": PendulumEnvironment}
+                "Pendulum-v0": PendulumEnvironment,
+                "SimpleContinuous": SimpleContinuousEnvironment}
 
 PG_METHODS = {"naive": {"agent": NaivePolicyGradientAgent,
                         "config": BaseAgentConfig},
