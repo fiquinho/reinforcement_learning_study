@@ -210,7 +210,7 @@ def feed_forward_continuous_model_constructor(input_dim, output_dim):
             for i in range(self.hidden_layers_count - 1):  # The input layer is counted in hidden_layers_count
                 self.hidden_layers.append(Dense(layer_size, activation=activation))
 
-            self.output_sigma = Dense(output_dim, activation="sigmoid")
+            self.output_sigma = Dense(output_dim, activation=tf.nn.relu)
 
         @tf.function(input_signature=[tf.TensorSpec(shape=[None, input_dim], dtype=tf.float32)])
         def call(self, inputs: tf.Tensor):
